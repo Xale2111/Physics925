@@ -1,0 +1,4 @@
+[submodule "externals/EngineLib"]
+	path = externals/EngineLib
+	url = git@github.com:SAE-Geneve/GPR925_EngineLib.git
+	branch = main

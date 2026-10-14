@@ -1,0 +1,19 @@
+# Build output
+[bB]uild/
+# CLion's default build directory
+cmake-build-*/
+# Your own presets, not the course's
+CMakeUserPresets.json
+
+# vcpkg
+vcpkg_installed/
+
+# IDE / tooling
+.idea/
+.vscode/
+.cache/
+compile_commands.json
+**/.DS_Store
+
+# Written by the PC sample host next to where it is run
+imgui.ini
