@@ -1,0 +1,17 @@
+{
+  "name": "gpr925-physics",
+  "version-string": "1.0",
+  "features": {
+    "tests": {
+      "description": "Unit tests",
+      "dependencies": ["gtest"]
+    },
+    "samples": {
+      "description": "PC sample host",
+      "dependencies": [
+        { "name": "imgui", "features": ["sdl3-binding", "sdl3-renderer-binding"] },
+        "sdl3"
+      ]
+    }
+  }
+}

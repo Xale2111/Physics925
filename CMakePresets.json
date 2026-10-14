@@ -1,0 +1,71 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 25, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "USE_SAMPLES": "ON",
+        "USE_TESTING": "ON",
+        "GPR925_SCALAR": "FLOAT",
+        "GPR925_WARNINGS_AS_ERRORS": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "debug",
+      "displayName": "Debug (samples + tests)",
+      "inherits": "base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "debug-fixed",
+      "displayName": "Debug, Fixed Scalar as on the DS (samples + tests)",
+      "inherits": "base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug", "GPR925_SCALAR": "FIXED" }
+    },
+    {
+      "name": "release",
+      "displayName": "Release (samples + tests)",
+      "inherits": "base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    },
+    {
+      "name": "relwithdebinfo",
+      "displayName": "RelWithDebInfo (samples + tests)",
+      "inherits": "base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
+    },
+    {
+      "name": "nds",
+      "displayName": "Nintendo DS samples ROM (devkitARM, needs DEVKITPRO)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "toolchainFile": "$env{DEVKITPRO}/cmake/NDS.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "USE_SAMPLES": "OFF",
+        "USE_TESTING": "OFF",
+        "GPR925_SCALAR": "FIXED",
+        "GPR925_WARNINGS_AS_ERRORS": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "debug", "configurePreset": "debug" },
+    { "name": "debug-fixed", "configurePreset": "debug-fixed" },
+    { "name": "release", "configurePreset": "release" },
+    { "name": "relwithdebinfo", "configurePreset": "relwithdebinfo" },
+    { "name": "nds", "configurePreset": "nds" }
+  ],
+  "testPresets": [
+    { "name": "debug", "configurePreset": "debug", "output": { "outputOnFailure": true } },
+    { "name": "debug-fixed", "configurePreset": "debug-fixed", "output": { "outputOnFailure": true } },
+    { "name": "release", "configurePreset": "release", "output": { "outputOnFailure": true } },
+    { "name": "relwithdebinfo", "configurePreset": "relwithdebinfo", "output": { "outputOnFailure": true } }
+  ]
+}
