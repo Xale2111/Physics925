@@ -30,8 +30,8 @@ SdlSampleDrawer::Viewport SdlSampleDrawer::FitCamera(const Rect& camera) const {
   int height = 0;
   SDL_GetCurrentRenderOutputSize(renderer_, &width, &height);
   const Vec2 camera_size = camera.Size();
-  const float camera_width = ToFloat(camera_size.x);
-  const float camera_height = ToFloat(camera_size.y);
+  const float camera_width = ToFloat(camera_size.x());
+  const float camera_height = ToFloat(camera_size.y());
   if (camera_width <= 0.0f || camera_height <= 0.0f) {
     return {};
   }
@@ -39,9 +39,9 @@ SdlSampleDrawer::Viewport SdlSampleDrawer::FitCamera(const Rect& camera) const {
                                static_cast<float>(height) / camera_height);
   return {scale,
           (static_cast<float>(width) - camera_width * scale) / 2.0f -
-              ToFloat(camera.min_bound.x) * scale,
+              ToFloat(camera.min_bound.x()) * scale,
           (static_cast<float>(height) - camera_height * scale) / 2.0f -
-              ToFloat(camera.min_bound.y) * scale};
+              ToFloat(camera.min_bound.y()) * scale};
 }
 
 void SdlSampleDrawer::Render(const DrawList& draw_list) {
@@ -49,12 +49,12 @@ void SdlSampleDrawer::Render(const DrawList& draw_list) {
 
   const Vec2 camera_size = draw_list.camera.Size();
   const SDL_FRect background{
-      ToFloat(draw_list.camera.min_bound.x) * viewport.scale +
+      ToFloat(draw_list.camera.min_bound.x()) * viewport.scale +
           viewport.offset_x,
-      ToFloat(draw_list.camera.min_bound.y) * viewport.scale +
+      ToFloat(draw_list.camera.min_bound.y()) * viewport.scale +
           viewport.offset_y,
-      ToFloat(camera_size.x) * viewport.scale,
-      ToFloat(camera_size.y) * viewport.scale};
+      ToFloat(camera_size.x()) * viewport.scale,
+      ToFloat(camera_size.y()) * viewport.scale};
   SDL_SetRenderDrawColorFloat(renderer_, kBackgroundColor.r, kBackgroundColor.g,
                               kBackgroundColor.b, kBackgroundColor.a);
   SDL_RenderFillRect(renderer_, &background);
@@ -70,8 +70,8 @@ void SdlSampleDrawer::RenderCircles(const DrawList& draw_list,
   indices_.clear();
   for (const auto& circle : draw_list.circles) {
     const SDL_FPoint center{
-        ToFloat(circle.center.x) * viewport.scale + viewport.offset_x,
-        ToFloat(circle.center.y) * viewport.scale + viewport.offset_y};
+        ToFloat(circle.center.x()) * viewport.scale + viewport.offset_x,
+        ToFloat(circle.center.y()) * viewport.scale + viewport.offset_y};
     const float radius = ToFloat(circle.radius) * viewport.scale;
     const int segments = std::clamp(static_cast<int>(radius),
                                     kMinCircleSegments, kMaxCircleSegments);
@@ -111,10 +111,10 @@ void SdlSampleDrawer::RenderBoxes(const DrawList& draw_list,
       const auto& box = draw_list.boxes[end];
       const auto top_left = box.center - box.half_size;
       rects_.push_back(
-          {ToFloat(top_left.x) * viewport.scale + viewport.offset_x,
-           ToFloat(top_left.y) * viewport.scale + viewport.offset_y,
-           ToFloat(box.half_size.x) * 2.0f * viewport.scale,
-           ToFloat(box.half_size.y) * 2.0f * viewport.scale});
+          {ToFloat(top_left.x()) * viewport.scale + viewport.offset_x,
+           ToFloat(top_left.y()) * viewport.scale + viewport.offset_y,
+           ToFloat(box.half_size.x()) * 2.0f * viewport.scale,
+           ToFloat(box.half_size.y()) * 2.0f * viewport.scale});
     }
     SetDrawColor(color);
     SDL_RenderFillRects(renderer_, rects_.data(),
@@ -134,10 +134,10 @@ void SdlSampleDrawer::RenderLines(const DrawList& draw_list,
       current_color = line.color;
     }
     SDL_RenderLine(renderer_,
-                   ToFloat(line.a.x) * viewport.scale + viewport.offset_x,
-                   ToFloat(line.a.y) * viewport.scale + viewport.offset_y,
-                   ToFloat(line.b.x) * viewport.scale + viewport.offset_x,
-                   ToFloat(line.b.y) * viewport.scale + viewport.offset_y);
+                   ToFloat(line.a.x()) * viewport.scale + viewport.offset_x,
+                   ToFloat(line.a.y()) * viewport.scale + viewport.offset_y,
+                   ToFloat(line.b.x()) * viewport.scale + viewport.offset_x,
+                   ToFloat(line.b.y()) * viewport.scale + viewport.offset_y);
   }
 }
 

@@ -12,10 +12,10 @@ namespace {
 constexpr int kStepCount = 600;
 
 bool IsInside(Vec2 point, const Rect& bounds, Scalar margin) {
-  return point.x >= bounds.min_bound.x - margin &&
-         point.x <= bounds.max_bound.x + margin &&
-         point.y >= bounds.min_bound.y - margin &&
-         point.y <= bounds.max_bound.y + margin;
+  return point.x() >= bounds.min_bound.x() - margin &&
+         point.x() <= bounds.max_bound.x() + margin &&
+         point.y() >= bounds.min_bound.y() - margin &&
+         point.y() <= bounds.max_bound.y() + margin;
 }
 
 TEST(SampleRegistry, StartsWithNoSampleSelected) {
@@ -98,14 +98,14 @@ TEST(HelloSample, DpadMovesThePlayer) {
   for (int step = 0; step < 30; ++step) {
     sample.FixedUpdate(right);
   }
-  EXPECT_GT(sample.player_position().x, start.x);
-  EXPECT_EQ(sample.player_position().y, start.y);
+  EXPECT_GT(sample.player_position().x(), start.x());
+  EXPECT_EQ(sample.player_position().y(), start.y());
 
   const Input up = Input::FromHeld(ButtonMask(Button::kUp), 0);
   for (int step = 0; step < 30; ++step) {
     sample.FixedUpdate(up);
   }
-  EXPECT_LT(sample.player_position().y, start.y);
+  EXPECT_LT(sample.player_position().y(), start.y());
   sample.End();
 }
 

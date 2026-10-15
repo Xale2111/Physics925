@@ -2,6 +2,7 @@
 #define GPR925_VEC2_H_
 
 #include "gpr925/scalar.h"
+#include "vector2.h"
 
 namespace gpr925 {
 
@@ -17,6 +18,7 @@ namespace gpr925 {
 /// @endcode
 /// The members below mirror `maths::Vector2` so that the swap is that one
 /// line.
+/*
 struct Vec2 {
   Scalar x{};  ///< Horizontal component, to the right.
   Scalar y{};  ///< Vertical component, pointing down on screen.
@@ -61,7 +63,9 @@ struct Vec2 {
     x *= v.x;
     y *= v.y;
   }
-};
+};*/
+
+using Vec2 = maths::Vector2<Scalar>;
 
 /// Axis-aligned rectangle, from its top-left to its bottom-right corner.
 struct Rect {
@@ -74,7 +78,7 @@ struct Rect {
   }
   /// Returns the middle point.
   [[nodiscard]] constexpr Vec2 Center() const noexcept {
-    return {(min_bound.x + max_bound.x) / 2, (min_bound.y + max_bound.y) / 2};
+    return {(min_bound.x() + max_bound.x()) / 2, (min_bound.y() + max_bound.y()) / 2};
   }
 };
 

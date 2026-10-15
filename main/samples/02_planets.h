@@ -8,6 +8,9 @@
 #include "main/samples/sample.h"
 #include "main/samples/sample_config.h"
 
+#include "vector2.h"
+#include "number_concepts.h"
+
 namespace gpr925 {
 
 class PlanetSample : public Sample {
@@ -23,15 +26,16 @@ class PlanetSample : public Sample {
 
 
  private:
+
   struct Ball {
-    Vec2 position{};
-    Vec2 velocity{};
+    maths::Vector2<Scalar> position{};
+    maths::Vector2<Scalar>  velocity{};
     ColorId color = sample_color::kWhite;
   };
 
   std::vector<Ball> balls_;
   Rect bounds_{};
-  Vec2 center_{};
+  maths::Vector2<Scalar>  center_{};
 };
 }
 
