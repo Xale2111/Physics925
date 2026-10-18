@@ -25,36 +25,61 @@ void PlanetSample::Begin(const gpr925::SampleContext& context) {
   bounds_ = context.world_bounds;
   center_ = bounds_.Center();
 
+  center_ball_.position = center_;
+  center_ball_.velocity = Vec2{};
+  center_ball_.color = sample_color::kWhite;
+
   SampleRng rng{kSeed};
   balls_.reserve(sample_config::kHelloBallCount);
   for (std::size_t i = 0; i < sample_config::kHelloBallCount; ++i) {
     Ball ball;
     ball.position = {rng.Range(bounds_.min_bound.x(), bounds_.max_bound.x()),
                      rng.Range(bounds_.min_bound.y(), bounds_.max_bound.y())};
-    ball.velocity = {rng.Range(-kMaxBallSpeed, kMaxBallSpeed),
-                     rng.Range(-kMaxBallSpeed, kMaxBallSpeed)};
+
+    // Setting the velocity of the ball directly based on the tangent to the center
+    const Vec2 to_center = center_ - ball.position;
+    const Vec2 tangent = Vec2{-to_center.y(), to_center.x()}.Normalize();
+
+    //direction is based on the tangent (-x then counterclockwise, -y clockwise)
+    //here it's counterclockwise
+    //since the direction is defined by the tangent, we only need to get a rdm speed
+    const auto speed = rng.Range(kMaxBallSpeed / 4, kMaxBallSpeed);
+    ball.velocity = tangent * speed;
+
     ball.color = rng.RandomColor();
     balls_.push_back(ball);
   }
 }
 
 void PlanetSample::FixedUpdate(const Input& input) {
-  if (!input.IsHeld(Button::kB)) {
-   //Not held -> continue. Held -> pause.
+  if (input.IsHeld(Button::kB)) {
+    return;  // Held -> pause.
   }
 
-  //Center of world bounds is the center of the galaxie
-  //Each planets needs to to a mcu based on the center
-  // a = (v*v) / r
-  // vector a is from current position to center
-  // vector v is tangent to the circle (radius)
+  for (Ball& ball : balls_) {
+    const Vec2 to_center = center_ - ball.position;
+    const auto radius = to_center.Magnitude();
 
+    //calculate the acceleration
+    // a = v*v/r (this is float so we to convert to vector)
+    const auto speed = ball.velocity.Magnitude();
+    const auto a_length = (speed * speed) / radius;
+    const Vec2 a = to_center.Normalize() * a_length;
+
+    //setting the new velocity
+    ball.velocity += a * kFixedDeltaTime;
+
+    // changing position based on the velocity
+    ball.position += ball.velocity * kFixedDeltaTime;
+  }
 }
 
 void PlanetSample::Draw(DrawList& draw_list) const {
   for (const Ball& ball : balls_) {
     draw_list.circles.push_back({ball.position, kBallRadius, ball.color});
   }
+
+  draw_list.circles.push_back({center_ball_.position, kBallRadius, center_ball_.color});
 
   const maths::Vector2<Scalar> top_left = bounds_.min_bound + kFrameMargin;
   const maths::Vector2<Scalar> bottom_right = bounds_.max_bound - kFrameMargin;

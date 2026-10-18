@@ -6,7 +6,7 @@
 #define GPR925PHYSICS_INCLUDE_GPR925_FIXED_POINT_H_
 
 #include "number_concepts.h"
-#include "include/gpr925/fixed.h"
+#include "gpr925/fixed.h"
 
 template <>
 struct maths::NumberTraits<gpr925::Fixed> {

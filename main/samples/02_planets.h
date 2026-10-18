@@ -36,6 +36,7 @@ class PlanetSample : public Sample {
   std::vector<Ball> balls_;
   Rect bounds_{};
   maths::Vector2<Scalar>  center_{};
+  Ball center_ball_;
 };
 }
 

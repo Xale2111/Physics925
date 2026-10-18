@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-#include "gpr925/fixed.h"
+#include "gpr925/fixed_point.h"
 
 namespace gpr925 {
 
