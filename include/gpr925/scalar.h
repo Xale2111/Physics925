@@ -29,6 +29,8 @@ using Scalar = Fixed;
 using Scalar = float;
 #endif
 
+inline constexpr bool kScalarIsFixed = std::is_same_v<Scalar, Fixed>;
+
 /// Returns the square root of a float (`Sqrt(Fixed)` is in fixed.h).
 [[nodiscard]] inline float Sqrt(float value) noexcept {
   return std::sqrt(value);
