@@ -20,7 +20,7 @@ constexpr maths::Vector2<Scalar> kBoxOffset{Ratio(3, 2), Ratio(1, 1)};
 // Distance between the frame lines and the edge of the world
 constexpr maths::Vector2<Scalar> kFrameMargin{Ratio(1, 5), Ratio(1, 5)};
 
-inline constexpr Scalar kRadiusEpsilon = Ratio(4, 5);   // 0.8 m
+constexpr Scalar kRadiusEpsilon = Ratio(4, 5);   // 0.8 m
 
 }  // namespace
 
@@ -93,8 +93,7 @@ void PlanetSample::FixedUpdate(const Input& input) {
 
       //calculate the acceleration
       // a = v*v/r (this is float so we to convert to vector)
-      const auto speed = ball.velocity.Magnitude();
-      const auto a_length = (speed * speed) / radius;
+      const auto a_length = ball.velocity.SqrMagnitude() / radius;
       const Vec2 a = to_center.Normalize() * a_length;
 
       //setting the new velocity

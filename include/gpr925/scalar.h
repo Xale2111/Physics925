@@ -5,6 +5,7 @@
 
 #include "gpr925/fixed_point.h"
 
+#include "fixed.h"
 namespace gpr925 {
 
 /// The real number type of the engine and the samples.
