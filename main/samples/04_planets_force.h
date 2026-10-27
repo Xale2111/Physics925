@@ -9,6 +9,7 @@
 
 #include "vector2.h"
 #include "number_concepts.h"
+#include "gpr925/physics_world.h"
 
 namespace gpr925 {
 
@@ -25,17 +26,14 @@ class PlanetForceSample : public Sample {
 
 
  private:
-
-  struct Ball {
-    maths::Vector2<Scalar> position{};
-    maths::Vector2<Scalar>  velocity{};
-    ColorId color = sample_color::kWhite;
-  };
-
-  std::vector<Ball> balls_;
+  PhysicsWorld world_;
+  BodyId center_id_{};
+  // all the planet ids
+  std::vector<BodyId> planet_ids_;
+  //since color isn't part of the physics, keep it outside
+  std::vector<ColorId> planet_colors_;
   Rect bounds_{};
-  maths::Vector2<Scalar>  center_{};
-  Ball center_ball_;
+
 };
 }  // namespace gpr925
 

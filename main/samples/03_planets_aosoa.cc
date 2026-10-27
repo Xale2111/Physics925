@@ -25,9 +25,11 @@ constexpr Scalar kRadiusEpsilon = Ratio(4, 5);  // 0.8 m
 // using size_t for the type since we will be looping with it
 constexpr size_t kFour = 4;
 
+// issue with kHelloBallCount % 4 != 0? where does the remainder go?
+// since kHelloBallCount % 4 can't be >3, add 3?
 // Should this include the + 3?
-//Should I do +1 here to manager the last (possibly not complete) group of 4?
-constexpr size_t kBallsDividedByFour = sample_config::kHelloBallCount / kFour;
+//adding +1 here to manager the last (possibly not complete) group of 4
+constexpr size_t kBallsDividedByFour = sample_config::kHelloBallCount / kFour +1;
 
 }  // namespace
 
@@ -39,13 +41,11 @@ void PlanetAoSoaSample::Begin(const gpr925::SampleContext& context) {
   center_ball_.velocity = Vec2{};
   center_ball_.color = sample_color::kWhite;
 
-  // issue with kHelloBallCount % 4 != 0? where does the remainder go?
-  // since kHelloBallCount % 4 can't be >3, add 3
-  balls_positions_.assign(kBallsDividedByFour + 3,
+  balls_positions_.assign(kBallsDividedByFour,
                           maths::FourVector2<Scalar>{});
-  balls_velocities_.assign(kBallsDividedByFour + 3,
+  balls_velocities_.assign(kBallsDividedByFour,
                            maths::FourVector2<Scalar>{});
-  balls_colors_.assign(kBallsDividedByFour + 3, sample_color::kWhite);
+  balls_colors_.assign(kBallsDividedByFour, sample_color::kWhite);
 
   SampleRng rng{kSeed};
   // First loop to go through all the fourVector
