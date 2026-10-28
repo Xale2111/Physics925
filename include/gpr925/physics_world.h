@@ -13,7 +13,7 @@
 namespace gpr925 {
 
 // Using size_t to have access to the bodies by index.
-using BodyId = std::size_t;
+using BodyId = std::size_t; //-> enum class BodyId : size_t;
 
 enum class BodyType {
   kStatic,   // the object does not move
@@ -27,7 +27,7 @@ struct BodyDef {
   Scalar mass{};
   BodyType type = BodyType::kDynamic;
 };
-
+//TODO : Make class
 struct Body {
   Vec2 position{};
   Vec2 velocity{};
@@ -37,7 +37,7 @@ struct Body {
   Vec2 force{};
 
   // A force acts during the whole step: it changes the velocity by (F/m)*dt.
-  void ApplyForce(const Vec2& applied_force) { force += applied_force; }
+  void ApplyForce(Vec2 applied_force) { force += applied_force; }
 };
 
 class PhysicsWorld {
@@ -49,7 +49,8 @@ class PhysicsWorld {
   // min_distance: below this distance the attraction stops growing
   PhysicsWorld(Scalar gravitational_constant, Scalar min_distance);
 
-  BodyId CreateBody(const BodyDef& def);
+  BodyId AddBody(const BodyDef& def);
+  //TODO : Remove Body
 
   void Clear(){bodies_.clear();}
   void ReserveBodyVectorSize (size_t size_to_reserve){bodies_.reserve(size_to_reserve);}

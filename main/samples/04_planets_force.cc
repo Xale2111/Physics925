@@ -33,7 +33,7 @@ void PlanetForceSample::Begin(const gpr925::SampleContext& context) {
 
   world_ = {kGravity, kRadiusEpsilon};
 
-  center_id_ = world_.CreateBody({center, Vec2{}, kSunMass, BodyType::kDynamic});
+  center_id_ = world_.AddBody({center, Vec2{}, kSunMass, BodyType::kDynamic});
 
   SampleRng rng{kSeed};
   world_.ReserveBodyVectorSize(sample_config::kHelloBallCount);
@@ -43,19 +43,19 @@ void PlanetForceSample::Begin(const gpr925::SampleContext& context) {
   for (std::size_t i = 0; i < sample_config::kHelloBallCount; ++i) {
     const Vec2 position{rng.Range(bounds_.min_bound.x(), bounds_.max_bound.x()),
                         rng.Range(bounds_.min_bound.y(), bounds_.max_bound.y())};
-    const Scalar mass = rng.Range(Ratio(1, 10), Ratio(3, 10));
+    const Scalar mass = rng.Range(Ratio(1, 10), Ratio(3, 10));//TODO :Use const
     const ColorId color = rng.RandomColor();
 
     const Vec2 to_center = center - position;
 
     const Scalar radius = to_center.Magnitude();
-    const Scalar speed = maths::NumberTraits<Scalar>::Sqrt(
-        kGravity * kSunMass / radius);
+    const Scalar speed = maths::NumberTraits<Scalar>::Sqrt(kGravity * kSunMass / radius);
     // Perpendicular to the radius: counterclockwise
     const Vec2 tangent = Vec2{-to_center.y(), to_center.x()}.Normalize();
 
 
-    planet_ids_.push_back(world_.CreateBody({position, tangent*speed, mass, BodyType::kDynamic}));
+    planet_ids_.push_back(
+        world_.AddBody({position, tangent * speed, mass, BodyType::kDynamic}));
     planet_colors_.push_back(color);
   }
 

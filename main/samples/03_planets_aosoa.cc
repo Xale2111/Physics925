@@ -5,6 +5,7 @@
 #include "main/samples/03_planets_aosoa.h"
 
 #include "main/samples/sample_rng.h"
+#include "four_scalar.h"
 
 namespace gpr925 {
 
@@ -112,6 +113,22 @@ void PlanetAoSoaSample::FixedUpdate(const Input& input) {
     }
   } else {
     for (std::size_t i = 0; i < kBallsDividedByFour; ++i) {
+      /*maths::FourVector2<Scalar> balls_positions = balls_positions_[i];
+
+      maths::FourVector2<Scalar> center = maths::FourVector2<Scalar>({center_});//not correct
+
+      maths::FourVector2<Scalar> to_center = center - balls_positions;
+
+      maths::FourScalar<Scalar> radius = to_center.Magnitude();//use rsqrt to avoid sqrt
+
+      maths::FourScalar<Scalar> a_length = balls_velocities_[i].SqrMagnitude() / radius;
+
+      maths::FourVector2<Scalar> a = to_center[i].Normalize() * a_length;
+
+      maths::FourScalar<Scalar> four_fixed_dt = maths::FourScalar<Scalar>(kFixedDeltaTime);//need broadcast for this
+
+      balls_velocities_[i] += a * four_fixed_dt;
+      balls_positions[i] += balls_velocities_[i] * four_fixed_dt;*/
       for (std::size_t j = 0; j < kFour; ++j) {
         Vec2 ballPosition = {balls_positions_[i].Xs()[j],
                              balls_positions_[i].Ys()[j]};
