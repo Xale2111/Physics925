@@ -45,8 +45,8 @@ class PhysicsWorld {
 
   PhysicsWorld() = default;
 
-  // gravitational_constant: the G of F = G*m1*m2/r^2.
-  // min_distance: below this distance the attraction stops growing.
+  // gravitational_constant: the G of F = G*m1*m2/r^2
+  // min_distance: below this distance the attraction stops growing
   PhysicsWorld(Scalar gravitational_constant, Scalar min_distance);
 
   BodyId CreateBody(const BodyDef& def);

@@ -62,13 +62,14 @@ void PhysicsWorld::ApplyGravity() {
 void PhysicsWorld::Integrate(Scalar dt) {
   for (Body& body : bodies_) {
     if (body.type == BodyType::kDynamic) {
-      // Second law: a = F / m
+      //Second law: a = F / m
       const Vec2 acceleration{body.force.x() / body.mass,
                               body.force.y() / body.mass};
-      body.velocity += acceleration * dt;  // velocity first...
-      body.position += body.velocity * dt;  // ...then position, new velocity
+      //semi implicit Euler integration
+      body.velocity += acceleration * dt;  // velocity first
+      body.position += body.velocity * dt;  //then position, new velocity
     }
-    body.force = Vec2{};  // forces only last one step
+    body.force = Vec2{};  //reset forces
   }
 }
 
