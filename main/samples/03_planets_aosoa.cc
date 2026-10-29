@@ -113,46 +113,26 @@ void PlanetAoSoaSample::FixedUpdate(const Input& input) {
     }
   } else {
     for (std::size_t i = 0; i < kBallsDividedByFour; ++i) {
-      /*maths::FourVector2<Scalar> balls_positions = balls_positions_[i];
+      maths::FourVector2<Scalar> balls_positions = balls_positions_[i];
 
-      maths::FourVector2<Scalar> center = maths::FourVector2<Scalar>({center_});//not correct
+      maths::FourVector2<Scalar> center =
+          maths::FourVector2<Scalar>({center_});  // not correct
 
       maths::FourVector2<Scalar> to_center = center - balls_positions;
 
-      maths::FourScalar<Scalar> radius = to_center.Magnitude();//use rsqrt to avoid sqrt
+      maths::FourScalar<Scalar> radius =
+          to_center.Magnitude();  // use rsqrt to avoid sqrt
 
-      maths::FourScalar<Scalar> a_length = balls_velocities_[i].SqrMagnitude() / radius;
+      maths::FourScalar<Scalar> a_length =
+          balls_velocities_[i].SqrMagnitude() / radius;
 
-      maths::FourVector2<Scalar> a = to_center[i].Normalize() * a_length;
+      maths::FourVector2<Scalar> a = to_center.Normalize() * a_length;
 
-      maths::FourScalar<Scalar> four_fixed_dt = maths::FourScalar<Scalar>(kFixedDeltaTime);//need broadcast for this
+      maths::FourScalar<Scalar> four_fixed_dt = maths::FourScalar<Scalar>(
+          kFixedDeltaTime);  // need broadcast for this
 
       balls_velocities_[i] += a * four_fixed_dt;
-      balls_positions[i] += balls_velocities_[i] * four_fixed_dt;*/
-      for (std::size_t j = 0; j < kFour; ++j) {
-        Vec2 ballPosition = {balls_positions_[i].Xs()[j],
-                             balls_positions_[i].Ys()[j]};
-        const Vec2 to_center = center_ - ballPosition;
-        const auto radius = to_center.Magnitude();
-
-        // calculate the acceleration
-        //  a = v*v/r (this is float so we to convert to vector)
-        Vec2 ballVelocity = {balls_velocities_[i].Xs()[j],
-                             balls_velocities_[i].Ys()[j]};
-
-        const auto a_length = ballVelocity.SqrMagnitude() / radius;
-        const Vec2 a = to_center.Normalize() * a_length;
-
-        // setting the new velocity
-        balls_velocities_[i].Xs()[j] += a.x() * kFixedDeltaTime;
-        balls_velocities_[i].Ys()[j] += a.y() * kFixedDeltaTime;
-
-        // changing position based on the velocity
-        balls_positions_[i].Xs()[j] +=
-            balls_velocities_[i].Xs()[j] * kFixedDeltaTime;
-        balls_positions_[i].Ys()[j] +=
-            balls_velocities_[i].Ys()[j] * kFixedDeltaTime;
-      }
+      balls_positions_[i] += balls_velocities_[i] * four_fixed_dt;
     }
   }
 }
