@@ -17,13 +17,16 @@ PhysicsWorld::PhysicsWorld(Scalar gravitational_constant, Scalar min_distance)
 BodyId PhysicsWorld::AddBody(const BodyDef& def) {
   assert(def.mass > Scalar{} &&
          "a body needs a strictly positive mass");  //<- do not use
-  Body body{.position = def.position,
-            .velocity = def.velocity,
-            .mass = def.mass,
-            .type = def.type};
+  Body body(def);
   bodies_.push_back(body);
-  return bodies_.size() - 1;
+  return static_cast<BodyId>(bodies_.size() - 1);
 }
+/*
+void PhysicsWorld::RemoveBody(BodyId id) {
+  //Implement logic to remove a body by setting his mass to the next valid one
+  auto temp = id;
+}*/
+
 
 void PhysicsWorld::Step(Scalar dt) {
   ApplyGravity();  // sum the forces
@@ -35,11 +38,12 @@ void PhysicsWorld::ApplyGravity() {
     for (std::size_t j = i + 1; j < bodies_.size(); ++j) {
       Body& a = bodies_[i];
       Body& b = bodies_[j];
-      if (a.type == BodyType::kStatic && b.type == BodyType::kStatic) {
+      if (a.GetBodyType() == BodyType::kStatic &&
+          b.GetBodyType() == BodyType::kStatic) {
         continue;  // neither can move: the force would be discarded
       }
 
-      const Vec2 delta = b.position - a.position;  // from a to b
+      const Vec2 delta = b.GetPosition() - a.GetPosition();  // from a to b
       Scalar sqr_distance = delta.SqrMagnitude();
       // check distance between bodies. If it is too small, set it to the
       // minimum distance
@@ -51,7 +55,7 @@ void PhysicsWorld::ApplyGravity() {
 
       // Gravitation law -> F = (G * m1 * m2) / r^2
       const Scalar magnitude =
-          gravitational_constant_ * a.mass * b.mass / sqr_distance;
+          gravitational_constant_ * a.GetMass() * b.GetMass() / sqr_distance;
       const Vec2 force_on_a = delta * (magnitude / distance);
 
       // third law: equal and opposite
@@ -63,17 +67,18 @@ void PhysicsWorld::ApplyGravity() {
 
 void PhysicsWorld::Integrate(Scalar dt) {
   for (Body& body : bodies_) {
-    if (body.type == BodyType::kStatic) {
+    if (body.GetBodyType() == BodyType::kStatic) {
       continue;
     }
     // Second law: a = F / m
-    const Vec2 acceleration{body.force.x() / body.mass,
-                            body.force.y() / body.mass};
+    const Vec2 acceleration{body.GetForce().x() / body.GetMass(),
+                            body.GetForce().y() / body.GetMass()};
     // semi implicit Euler integration
-    body.velocity += acceleration * dt;   // velocity first
-    body.position += body.velocity * dt;  // then position, new velocity
+    body.SetVelocity(body.GetVelocity() + acceleration * dt);   // velocity first
+    body.SetPosition(body.GetPosition() +
+                     body.GetVelocity() * dt);  // then position, new velocity
 
-    body.force = Vec2{};  // reset forces
+    body.SetForce(Vec2{});  // reset forces
   }
 }
 

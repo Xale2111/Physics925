@@ -24,6 +24,8 @@ constexpr maths::Vector2<Scalar> kFrameMargin{Ratio(1, 5), Ratio(1, 5)};
 constexpr Scalar kRadiusEpsilon = Ratio(4, 5);   // 0.8 m
 constexpr Scalar kGravity = Ratio(1, 1000);
 constexpr Scalar kSunMass = Ratio(10000, 1); //center of the universe
+constexpr Scalar kMinPlanetMass = Ratio(1, 10);
+constexpr Scalar kMaxPlanetMass = Ratio(3, 10);
 
 }  // namespace
 
@@ -43,7 +45,7 @@ void PlanetForceSample::Begin(const gpr925::SampleContext& context) {
   for (std::size_t i = 0; i < sample_config::kHelloBallCount; ++i) {
     const Vec2 position{rng.Range(bounds_.min_bound.x(), bounds_.max_bound.x()),
                         rng.Range(bounds_.min_bound.y(), bounds_.max_bound.y())};
-    const Scalar mass = rng.Range(Ratio(1, 10), Ratio(3, 10));//TODO :Use const
+    const Scalar mass = rng.Range(kMinPlanetMass, kMaxPlanetMass);
     const ColorId color = rng.RandomColor();
 
     const Vec2 to_center = center - position;
@@ -70,11 +72,11 @@ void PlanetForceSample::FixedUpdate(const Input& input) {
 }
 void PlanetForceSample::Draw(DrawList& draw_list) const {
   for (std::size_t i = 0; i < planet_ids_.size(); ++i) {
-    draw_list.circles.push_back({world_.GetBody(planet_ids_[i]).position,
+    draw_list.circles.push_back({world_.GetBody(planet_ids_[i]).GetPosition(),
                                  kBallRadius, planet_colors_[i]});
   }
 
-  draw_list.circles.push_back({world_.GetBody(center_id_).position,
+  draw_list.circles.push_back({world_.GetBody(center_id_).GetPosition(),
                                kBallRadius, sample_color::kWhite});
 
 

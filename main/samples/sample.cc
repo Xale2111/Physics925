@@ -13,7 +13,7 @@ SampleRegistry::SampleRegistry() {
   samples_.push_back({"01 Hello", std::make_unique<HelloSample>()});
   samples_.push_back({"02 Planets", std::make_unique<PlanetSample>()});
   samples_.push_back({"03 Planets AoSoA", std::make_unique<PlanetAoSoaSample>()});
-  samples_.push_back({"04 Planets Force", std::make_unique<PlanetForceSample>()});
+  samples_.push_back({"04 Planets GetForce", std::make_unique<PlanetForceSample>()});
 }
 
 SampleRegistry::~SampleRegistry() { Select(kNone, context_); }

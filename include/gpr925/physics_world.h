@@ -9,40 +9,14 @@
 
 #include "scalar.h"
 #include "vec2.h"
+#include "body_utils.h"
+#include "body_def.h"
+#include "body.h"
 
 namespace gpr925 {
 
-// Using size_t to have access to the bodies by index.
-using BodyId = std::size_t; //-> enum class BodyId : size_t;
-
-enum class BodyType {
-  kStatic,   // the object does not move
-  kDynamic,  // forces are applied to it
-};
-
-// Everything needed to create a body.
-struct BodyDef {
-  Vec2 position{};
-  Vec2 velocity{};
-  Scalar mass{};
-  BodyType type = BodyType::kDynamic;
-};
-//TODO : Make class
-struct Body {
-  Vec2 position{};
-  Vec2 velocity{};
-  Scalar mass{};
-  BodyType type = BodyType::kDynamic;
-  // Sum of the forces applied since the last step. Cleared by the world.
-  Vec2 force{};
-
-  // A force acts during the whole step: it changes the velocity by (F/m)*dt.
-  void ApplyForce(Vec2 applied_force) { force += applied_force; }
-};
-
 class PhysicsWorld {
  public:
-
   PhysicsWorld() = default;
 
   // gravitational_constant: the G of F = G*m1*m2/r^2
@@ -50,12 +24,14 @@ class PhysicsWorld {
   PhysicsWorld(Scalar gravitational_constant, Scalar min_distance);
 
   BodyId AddBody(const BodyDef& def);
-  //TODO : Remove Body
+  void RemoveBody(BodyId id);
 
-  void Clear(){bodies_.clear();}
-  void ReserveBodyVectorSize (size_t size_to_reserve){bodies_.reserve(size_to_reserve);}
-  [[nodiscard]] Body& GetBody(BodyId id) { return bodies_[id]; }
-  [[nodiscard]] const Body& GetBody(BodyId id) const { return bodies_[id]; }
+  void Clear() { bodies_.clear(); }
+  void ReserveBodyVectorSize(size_t size_to_reserve) {
+    bodies_.reserve(size_to_reserve);
+  }
+  [[nodiscard]] Body& GetBody(BodyId id) { return bodies_[static_cast<size_t>(id)]; }
+  [[nodiscard]] const Body& GetBody(BodyId id) const { return bodies_[static_cast<size_t>(id)]; }
   [[nodiscard]] std::size_t CountBody() const { return bodies_.size(); }
 
   // One fixed step: gather the forces, then integrate.
