@@ -46,9 +46,8 @@ class PhysicsWorld {
 
 
   // One fixed step: gather the forces, then integrate.
-  void Step(Scalar dt, bool stayInBounds = false);
-  //Step but with no gravity. Balls with bounce on the "walls" to stay in bounds (like the 01_hello.cc)
-  void StepFreeRoam(Scalar dt);
+  void Step(Scalar dt, bool stay_in_bounds = false);
+
 
  private:
   void ApplyGravity();

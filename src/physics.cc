@@ -10,8 +10,8 @@
 
 namespace gpr925 {
 
-PhysicsWorld::PhysicsWorld(Scalar gravitational_constant, Scalar min_distance,Rect bounds,
-                           size_t size_to_reserve) {
+PhysicsWorld::PhysicsWorld(Scalar gravitational_constant, Scalar min_distance,
+                           Rect bounds, size_t size_to_reserve) {
   gravitational_constant_ = gravitational_constant;
   min_distance_sqr_ = min_distance * min_distance;
   bounds_ = bounds;
@@ -21,7 +21,8 @@ PhysicsWorld::PhysicsWorld(Scalar gravitational_constant, Scalar min_distance,Re
 // the mass_ of the body must be strictly positive
 // return expected bodyID, (imply enum class for error)
 BodyId PhysicsWorld::AddBody(const BodyDef& def) {
-  //assert(def.mass > Scalar{} && "a body needs a strictly positive mass_");  //<- do not use
+  // assert(def.mass > Scalar{} && "a body needs a strictly positive mass_");
+  // //<- do not use
   Body body(def);
   bodies_.push_back(body);
   return static_cast<BodyId>(bodies_.size() - 1);
@@ -83,7 +84,8 @@ void PhysicsWorld::Integrate(Scalar dt) {
     const Vec2 acceleration{body.GetForce().x() / body.GetMass(),
                             body.GetForce().y() / body.GetMass()};
     // semi implicit Euler integration
-    body.SetVelocity(body.GetVelocity() + acceleration * dt);  // velocity_ first
+    body.SetVelocity(body.GetVelocity() +
+                     acceleration * dt);  // velocity_ first
     body.SetPosition(body.GetPosition() +
                      body.GetVelocity() * dt);  // then position_, new velocity_
 
@@ -126,8 +128,7 @@ void PhysicsWorld::UpdateTriggers() {
                               std::back_inserter(exited));
 
   for (const ColliderPair& pair : entered) {
-    events_.push_back(
-        {TriggerEventType::kEnter, pair.first(), pair.second()});
+    events_.push_back({TriggerEventType::kEnter, pair.first(), pair.second()});
   }
   for (const ColliderPair& pair : exited) {
     events_.push_back({TriggerEventType::kExit, pair.first(), pair.second()});
@@ -137,15 +138,22 @@ void PhysicsWorld::UpdateTriggers() {
 }
 void PhysicsWorld::BounceInBounds(Scalar dt) {
   for (std::size_t i = 0; i < bodies_.size(); ++i) {
-    bodies_[i].SetPosition(bodies_[i].GetPosition() + bodies_[i].GetVelocity() * dt);
+    bodies_[i].SetPosition(bodies_[i].GetPosition() +
+                           bodies_[i].GetVelocity() * dt);
 
-    if ((bodies_[i].GetVelocity().x() > Scalar{} && bodies_[i].GetPosition().x() > bounds_.max_bound.x()) ||
-        (bodies_[i].GetVelocity().x() < Scalar{} && bodies_[i].GetPosition().x() < bounds_.min_bound.x())) {
-      bodies_[i].SetVelocity(Vec2(-bodies_[i].GetVelocity().x(), bodies_[i].GetVelocity().y()));
+    if ((bodies_[i].GetVelocity().x() > Scalar{} &&
+         bodies_[i].GetPosition().x() > bounds_.max_bound.x()) ||
+        (bodies_[i].GetVelocity().x() < Scalar{} &&
+         bodies_[i].GetPosition().x() < bounds_.min_bound.x())) {
+      bodies_[i].SetVelocity(
+          Vec2(-bodies_[i].GetVelocity().x(), bodies_[i].GetVelocity().y()));
     }
-    if ((bodies_[i].GetVelocity().y() > Scalar{} && bodies_[i].GetPosition().y() > bounds_.max_bound.y()) ||
-        (bodies_[i].GetVelocity().y() < Scalar{} && bodies_[i].GetPosition().y() < bounds_.min_bound.y())) {
-      bodies_[i].SetVelocity(Vec2(bodies_[i].GetVelocity().x(), -bodies_[i].GetVelocity().y()));
+    if ((bodies_[i].GetVelocity().y() > Scalar{} &&
+         bodies_[i].GetPosition().y() > bounds_.max_bound.y()) ||
+        (bodies_[i].GetVelocity().y() < Scalar{} &&
+         bodies_[i].GetPosition().y() < bounds_.min_bound.y())) {
+      bodies_[i].SetVelocity(
+          Vec2(bodies_[i].GetVelocity().x(), -bodies_[i].GetVelocity().y()));
     }
   }
 }
