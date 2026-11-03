@@ -32,31 +32,15 @@ void PhysicsWorld::RemoveBody(BodyId id) {
   auto temp = id;
 }*/
 
-void PhysicsWorld::Step(Scalar dt) {
+void PhysicsWorld::Step(Scalar dt, bool stay_in_bounds) {
   events_.clear();
+  if (stay_in_bounds) {
+    BounceInBounds(dt);
+  }
   ApplyGravity();  // sum the forces
   Integrate(dt);   // velocity_, then position_
   UpdateTriggers();
 }
-
-void PhysicsWorld::StepFreeRoam(Scalar dt) {
-  events_.clear();
-  //Make the bodies stay in bounds
-  for (std::size_t i = 0; i < bodies_.size(); ++i) {
-    bodies_[i].SetPosition(bodies_[i].GetPosition() + bodies_[i].GetVelocity() * dt);
-
-    if ((bodies_[i].GetVelocity().x() > Scalar{} && bodies_[i].GetPosition().x() > bounds_.max_bound.x()) ||
-        (bodies_[i].GetVelocity().x() < Scalar{} && bodies_[i].GetPosition().x() < bounds_.min_bound.x())) {
-      bodies_[i].SetVelocity(Vec2(-bodies_[i].GetVelocity().x(), bodies_[i].GetVelocity().y()));
-    }
-    if ((bodies_[i].GetVelocity().y() > Scalar{} && bodies_[i].GetPosition().y() > bounds_.max_bound.y()) ||
-        (bodies_[i].GetVelocity().y() < Scalar{} && bodies_[i].GetPosition().y() < bounds_.min_bound.y())) {
-      bodies_[i].SetVelocity(Vec2(bodies_[i].GetVelocity().x(), -bodies_[i].GetVelocity().y()));
-    }
-  }
-  UpdateTriggers();
-}
-
 
 void PhysicsWorld::ApplyGravity() {
   for (std::size_t i = 0; i < bodies_.size(); ++i) {
@@ -151,6 +135,19 @@ void PhysicsWorld::UpdateTriggers() {
 
   previous_overlaps_ = std::move(current);
 }
+void PhysicsWorld::BounceInBounds(Scalar dt) {
+  for (std::size_t i = 0; i < bodies_.size(); ++i) {
+    bodies_[i].SetPosition(bodies_[i].GetPosition() + bodies_[i].GetVelocity() * dt);
 
+    if ((bodies_[i].GetVelocity().x() > Scalar{} && bodies_[i].GetPosition().x() > bounds_.max_bound.x()) ||
+        (bodies_[i].GetVelocity().x() < Scalar{} && bodies_[i].GetPosition().x() < bounds_.min_bound.x())) {
+      bodies_[i].SetVelocity(Vec2(-bodies_[i].GetVelocity().x(), bodies_[i].GetVelocity().y()));
+    }
+    if ((bodies_[i].GetVelocity().y() > Scalar{} && bodies_[i].GetPosition().y() > bounds_.max_bound.y()) ||
+        (bodies_[i].GetVelocity().y() < Scalar{} && bodies_[i].GetPosition().y() < bounds_.min_bound.y())) {
+      bodies_[i].SetVelocity(Vec2(bodies_[i].GetVelocity().x(), -bodies_[i].GetVelocity().y()));
+    }
+  }
+}
 
 }  // namespace gpr925

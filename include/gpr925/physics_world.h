@@ -46,7 +46,7 @@ class PhysicsWorld {
 
 
   // One fixed step: gather the forces, then integrate.
-  void Step(Scalar dt);
+  void Step(Scalar dt, bool stayInBounds = false);
   //Step but with no gravity. Balls with bounce on the "walls" to stay in bounds (like the 01_hello.cc)
   void StepFreeRoam(Scalar dt);
 
@@ -55,6 +55,7 @@ class PhysicsWorld {
   void Integrate(Scalar dt);
   //Checks the pairs that start or stop overlapping
   void UpdateTriggers();
+  void BounceInBounds(Scalar dt);
 
   std::vector<Body> bodies_;
   Scalar gravitational_constant_ = {};

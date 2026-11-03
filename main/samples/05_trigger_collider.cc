@@ -54,7 +54,7 @@ void TriggerCollider::FixedUpdate(const Input& input) {
   if (input.IsHeld(Button::kB)) {
     return;
   }
-  world_.StepFreeRoam(kFixedDeltaTime);
+  world_.Step(kFixedDeltaTime, true);
 
   for (const TriggerEvent& event : world_.TriggerEvents()) {
     const int change = event.type == TriggerEventType::kEnter ? 1 : -1;
