@@ -18,7 +18,7 @@ namespace gpr925 {
 ///
 /// @code
 /// SampleRng rng{kSeed};
-/// position = {rng.Range(bounds.min_bound.x, bounds.max_bound.x),
+/// position_ = {rng.Range(bounds.min_bound.x, bounds.max_bound.x),
 ///             rng.Range(bounds.min_bound.y, bounds.max_bound.y)};
 /// const ColorId color = rng.RandomColor();
 /// @endcode

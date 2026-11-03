@@ -109,7 +109,7 @@ struct DrawLine {
 ///
 /// Shapes are plain values pushed in @ref Sample::Draw, as follows:
 /// @code
-/// draw_list.circles.push_back({position, radius, sample_color::kRed});
+/// draw_list.circles.push_back({position_, radius, sample_color::kRed});
 /// draw_list.boxes.push_back({center, half_size, sample_color::kGreen});
 /// draw_list.lines.push_back({from, to, sample_color::kGrey});
 /// @endcode

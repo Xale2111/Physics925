@@ -1,19 +1,23 @@
 #include "main/samples/sample.h"
 
+
 #include "main/samples/01_hello.h"
 #include "main/samples/02_planets.h"
 #include "main/samples/03_planets_aosoa.h"
 #include "main/samples/04_planets_force.h"
+#include "main/samples/05_trigger_collider.h"
 
 namespace gpr925 {
 
 SampleRegistry::SampleRegistry() {
   // Register your samples here: bump the reserve and add a push_back
-  samples_.reserve(4);
+  samples_.reserve(5);
   samples_.push_back({"01 Hello", std::make_unique<HelloSample>()});
   samples_.push_back({"02 Planets", std::make_unique<PlanetSample>()});
   samples_.push_back({"03 Planets AoSoA", std::make_unique<PlanetAoSoaSample>()});
-  samples_.push_back({"04 Planets GetForce", std::make_unique<PlanetForceSample>()});
+  samples_.push_back({"04 Planets Force", std::make_unique<PlanetForceSample>()});
+  samples_.push_back({"05 Circle Trigger", std::make_unique<TriggerCollider>()});
+
 }
 
 SampleRegistry::~SampleRegistry() { Select(kNone, context_); }

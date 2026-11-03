@@ -129,7 +129,7 @@ class Fixed {
   constexpr Fixed() = default;
   /// Converts an integer (libnds' `inttof32`).
   ///
-  /// @param value Integer value, within the range of the type.
+  /// @param value Integer value, within the range of the type_.
   constexpr explicit Fixed(int value) noexcept
       : raw_(std::int32_t{value} * kOne) {}
   /// Converts a float constant, at compile time only (libnds' `floattof32`,

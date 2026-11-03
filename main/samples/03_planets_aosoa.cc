@@ -13,9 +13,9 @@ namespace {
 
 constexpr std::uint32_t kSeed = 0x01C0FFEEu;
 // Meters per second
-constexpr Scalar kMaxBallSpeed = Ratio(3, 1);
+constexpr Scalar kMaxBodySpeed = Ratio(3, 1);
 // Meters
-constexpr Scalar kBallRadius = Ratio(1, 10);
+constexpr Scalar kBodyRadius = Ratio(1, 10);
 constexpr maths::Vector2<Scalar> kBoxHalfSize{Ratio(1, 2), Ratio(1, 4)};
 constexpr maths::Vector2<Scalar> kBoxOffset{Ratio(3, 2), Ratio(1, 1)};
 // Distance between the frame lines and the edge of the world
@@ -23,7 +23,7 @@ constexpr maths::Vector2<Scalar> kFrameMargin{Ratio(1, 5), Ratio(1, 5)};
 
 constexpr Scalar kRadiusEpsilon = Ratio(4, 5);  // 0.8 m
 
-// using size_t for the type since we will be looping with it
+// using size_t for the type_ since we will be looping with it
 constexpr size_t kFour = 4;
 
 // issue with kHelloBallCount % 4 != 0? where does the remainder go?
@@ -59,7 +59,7 @@ void PlanetAoSoaSample::Begin(const gpr925::SampleContext& context) {
 
       const Vec2 to_center = center_ - position;
       const Vec2 tangent = Vec2{-to_center.y(), to_center.x()}.Normalize();
-      const Scalar speed = rng.Range(kMaxBallSpeed / 4, kMaxBallSpeed);
+      const Scalar speed = rng.Range(kMaxBodySpeed / 4, kMaxBodySpeed);
       const Vec2 velocity = tangent * speed;
 
       const ColorId color = rng.RandomColor();
@@ -142,14 +142,13 @@ void PlanetAoSoaSample::Draw(DrawList& draw_list) const {
     for (std::size_t j = 0; j < kFour; ++j) {
       Vec2 ballPosition = {balls_positions_[i].Xs()[j], balls_positions_[i].Ys()[j]};
       draw_list.circles.push_back(
-          {ballPosition,
-           kBallRadius,
+          {ballPosition, kBodyRadius,
            balls_colors_[i]});
     }
   }
 
   draw_list.circles.push_back(
-      {center_ball_.position, kBallRadius, center_ball_.color});
+      {center_ball_.position, kBodyRadius, center_ball_.color});
 
   const maths::Vector2<Scalar> top_left = bounds_.min_bound + kFrameMargin;
   const maths::Vector2<Scalar> bottom_right = bounds_.max_bound - kFrameMargin;

@@ -15,7 +15,7 @@ namespace gpr925 {
 /// It uses no physics engine, only @ref Scalar and @ref Vec2: copy it to start
 /// your own sample.
 ///
-/// - Balls move in straight lines at a random velocity and bounce on the
+/// - Balls move in straight lines at a random velocity_ and bounce on the
 ///   world bounds (circles). There are @ref sample_config::kHelloBallCount of
 ///   them: fewer on the DS than on PC.
 /// - The D-pad moves the player, a bigger circle.
@@ -33,7 +33,7 @@ class HelloSample : public Sample {
   /// Removes the balls.
   void End() override;
 
-  /// Returns the player's position, for the tests.
+  /// Returns the player's position_, for the tests.
   [[nodiscard]] Vec2 player_position() const { return player_position_; }
 
  private:

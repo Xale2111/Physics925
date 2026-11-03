@@ -8,7 +8,7 @@
 #include "fixed.h"
 namespace gpr925 {
 
-/// The real number type of the engine and the samples.
+/// The real number type_ of the engine and the samples.
 ///
 /// It is chosen by the CMake cache variable `GPR925_SCALAR`:
 /// - `FLOAT` (Windows and Linux presets): plain `float`;

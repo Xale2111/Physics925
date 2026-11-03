@@ -12,9 +12,9 @@ namespace {
 
 constexpr std::uint32_t kSeed = 0x01C0FFEEu;
 // Meters per second
-constexpr Scalar kMaxBallSpeed = Ratio(3, 1);
+constexpr Scalar kMaxBodySpeed = Ratio(3, 1);
 // Meters
-constexpr Scalar kBallRadius = Ratio(1, 10);
+constexpr Scalar kBodyRadius = Ratio(1, 10);
 constexpr maths::Vector2<Scalar> kBoxHalfSize{Ratio(1, 2), Ratio(1, 4)};
 constexpr maths::Vector2<Scalar> kBoxOffset{Ratio(3, 2), Ratio(1, 1)};
 // Distance between the frame lines and the edge of the world
@@ -39,7 +39,7 @@ void PlanetSample::Begin(const gpr925::SampleContext& context) {
     ball.position = {rng.Range(bounds_.min_bound.x(), bounds_.max_bound.x()),
                      rng.Range(bounds_.min_bound.y(), bounds_.max_bound.y())};
 
-    // Setting the velocity of the ball directly based on the tangent to the
+    // Setting the velocity_ of the ball directly based on the tangent to the
     // center
     const Vec2 to_center = center_ - ball.position;
     const Vec2 tangent = Vec2{-to_center.y(), to_center.x()}.Normalize();
@@ -47,7 +47,7 @@ void PlanetSample::Begin(const gpr925::SampleContext& context) {
     // direction is based on the tangent (-x then counterclockwise, -y
     // clockwise) here it's counterclockwise since the direction is defined by
     // the tangent, we only need to get a rdm speed
-    const auto speed = rng.Range(kMaxBallSpeed / 4, kMaxBallSpeed);
+    const auto speed = rng.Range(kMaxBodySpeed / 4, kMaxBodySpeed);
     ball.velocity = tangent * speed;
 
     ball.color = rng.RandomColor();
@@ -96,21 +96,21 @@ void PlanetSample::FixedUpdate(const Input& input) {
       const auto a_length = ball.velocity.SqrMagnitude() / radius;
       const Vec2 a = to_center.Normalize() * a_length;
 
-      //setting the new velocity
+      //setting the new velocity_
       ball.velocity += a * kFixedDeltaTime;
 
-      // changing position based on the velocity
+      // changing position_ based on the velocity_
       ball.position += ball.velocity * kFixedDeltaTime;
     }
   }
 }
 void PlanetSample::Draw(DrawList& draw_list) const {
   for (const Ball& ball : balls_) {
-    draw_list.circles.push_back({ball.position, kBallRadius, ball.color});
+    draw_list.circles.push_back({ball.position, kBodyRadius, ball.color});
   }
 
   draw_list.circles.push_back(
-      {center_ball_.position, kBallRadius, center_ball_.color});
+      {center_ball_.position, kBodyRadius, center_ball_.color});
 
   const maths::Vector2<Scalar> top_left = bounds_.min_bound + kFrameMargin;
   const maths::Vector2<Scalar> bottom_right = bounds_.max_bound - kFrameMargin;

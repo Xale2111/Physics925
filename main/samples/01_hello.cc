@@ -8,10 +8,10 @@ namespace {
 
 constexpr std::uint32_t kSeed = 0x01C0FFEEu;
 // Meters per second
-constexpr Scalar kMaxBallSpeed = Ratio(3, 1);
+constexpr Scalar kMaxBodySpeed = Ratio(3, 1);
 constexpr Scalar kPlayerSpeed = Ratio(4, 1);
 // Meters
-constexpr Scalar kBallRadius = Ratio(1, 10);
+constexpr Scalar kBodyRadius = Ratio(1, 10);
 constexpr Scalar kPlayerRadius = Ratio(3, 10);
 constexpr Vec2 kBoxHalfSize{Ratio(1, 2), Ratio(1, 4)};
 constexpr Vec2 kBoxOffset{Ratio(3, 2), Ratio(1, 1)};
@@ -22,7 +22,7 @@ constexpr Vec2 kFrameMargin{Ratio(1, 5), Ratio(1, 5)};
 // component-wise one, so a scale is a vector with twice the same value
 constexpr Vec2 Scale(Vec2 v, Scalar s) { return v * Vec2{s, s}; }
 
-// Reverses the velocity components that take a point further out of bounds. A
+// Reverses the velocity_ components that take a point further out of bounds. A
 // component is flipped only when the point is outside on that axis and still
 // moving away, so it doesn't jitter on the border.
 void BounceInside(Vec2 position, Vec2& velocity, const Rect& bounds) {
@@ -54,8 +54,8 @@ void HelloSample::Begin(const SampleContext& context) {
     Ball ball;
     ball.position = {rng.Range(bounds_.min_bound.x(), bounds_.max_bound.x()),
                      rng.Range(bounds_.min_bound.y(), bounds_.max_bound.y())};
-    ball.velocity = {rng.Range(-kMaxBallSpeed, kMaxBallSpeed),
-                     rng.Range(-kMaxBallSpeed, kMaxBallSpeed)};
+    ball.velocity = {rng.Range(-kMaxBodySpeed, kMaxBodySpeed),
+                     rng.Range(-kMaxBodySpeed, kMaxBodySpeed)};
     ball.color = rng.RandomColor();
     balls_.push_back(ball);
   }
@@ -101,7 +101,7 @@ void HelloSample::FixedUpdate(const Input& input) {
 
 void HelloSample::Draw(DrawList& draw_list) const {
   for (const Ball& ball : balls_) {
-    draw_list.circles.push_back({ball.position, kBallRadius, ball.color});
+    draw_list.circles.push_back({ball.position, kBodyRadius, ball.color});
   }
   draw_list.circles.push_back({player_position_, kPlayerRadius, player_color_});
 

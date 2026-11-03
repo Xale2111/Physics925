@@ -23,7 +23,7 @@ namespace gpr925 {
 ///
 /// L, R and START on the DS belong to the sample menu, not to the samples.
 /// The eight buttons use the eight bits of the mask: one more needs a wider
-/// type in @ref Input.
+/// type_ in @ref Input.
 enum class Button : std::uint8_t {
   kUp = 1 << 0,     ///< D-pad up.
   kDown = 1 << 1,   ///< D-pad down.

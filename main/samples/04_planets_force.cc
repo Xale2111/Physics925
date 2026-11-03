@@ -13,9 +13,9 @@ namespace {
 
 constexpr std::uint32_t kSeed = 0x01C0FFFEu;
 // Meters per second
-constexpr Scalar kMaxBallSpeed = Ratio(3, 1);
+constexpr Scalar kMaxBodySpeed = Ratio(3, 1);
 // Meters
-constexpr Scalar kBallRadius = Ratio(1, 10);
+constexpr Scalar kBodyRadius = Ratio(1, 10);
 constexpr maths::Vector2<Scalar> kBoxHalfSize{Ratio(1, 2), Ratio(1, 4)};
 constexpr maths::Vector2<Scalar> kBoxOffset{Ratio(3, 2), Ratio(1, 1)};
 // Distance between the frame lines and the edge of the world
@@ -33,12 +33,11 @@ void PlanetForceSample::Begin(const gpr925::SampleContext& context) {
   bounds_ = context.world_bounds;
   const Vec2 center = bounds_.Center();
 
-  world_ = {kGravity, kRadiusEpsilon};
+  world_ = {kGravity, kRadiusEpsilon, bounds_,sample_config::kHelloBallCount};
 
   center_id_ = world_.AddBody({center, Vec2{}, kSunMass, BodyType::kDynamic});
 
   SampleRng rng{kSeed};
-  world_.ReserveBodyVectorSize(sample_config::kHelloBallCount);
   planet_ids_.reserve(sample_config::kHelloBallCount);
   planet_colors_.reserve(sample_config::kHelloBallCount);
 
@@ -73,11 +72,11 @@ void PlanetForceSample::FixedUpdate(const Input& input) {
 void PlanetForceSample::Draw(DrawList& draw_list) const {
   for (std::size_t i = 0; i < planet_ids_.size(); ++i) {
     draw_list.circles.push_back({world_.GetBody(planet_ids_[i]).GetPosition(),
-                                 kBallRadius, planet_colors_[i]});
+                                 kBodyRadius, planet_colors_[i]});
   }
 
   draw_list.circles.push_back({world_.GetBody(center_id_).GetPosition(),
-                               kBallRadius, sample_color::kWhite});
+                               kBodyRadius, sample_color::kWhite});
 
 
   const maths::Vector2<Scalar> top_left = bounds_.min_bound + kFrameMargin;
