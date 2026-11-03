@@ -3,6 +3,7 @@
 // library, for PC and for the DS.
 
 #include <algorithm>
+#include <iterator>
 
 #include "gpr925/collision.h"
 #include "gpr925/physics_world.h"
