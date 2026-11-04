@@ -4,14 +4,16 @@
 
 #ifndef GPR925PHYSICS_INCLUDE_GPR925_COLLISION_H_
 #define GPR925PHYSICS_INCLUDE_GPR925_COLLISION_H_
-#include "collider.h"
+
+#include "variant"
+
+#include "circle_collider.h"
+#include "box_collider.h"
 #include "vec2.h"
 
 namespace gpr925 {
+[[nodiscard]] bool Overlap(const Collider& a, const Vec2& position_a, const Collider& b, const Vec2& position_b);
 
-//Only works with Circle and Circle
-[[nodiscard]] bool Overlap(const Collider& a, const Vec2& position_a,
-                           const Collider& b, const Vec2& position_b);
 
 }  // namespace gpr925
 

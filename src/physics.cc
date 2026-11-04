@@ -3,6 +3,7 @@
 // library, for PC and for the DS.
 
 #include <algorithm>
+#include <cassert>
 #include <iterator>
 
 #include "gpr925/collision.h"
@@ -16,6 +17,11 @@ PhysicsWorld::PhysicsWorld(Scalar gravitational_constant, Scalar min_distance,
   min_distance_sqr_ = min_distance * min_distance;
   bounds_ = bounds;
   bodies_.reserve(size_to_reserve);
+  // ApplyGravity divides by the squared distance: with gravity on, the minimum
+  // distance must be big enough for its square to be more than zero (with a
+  // fixed point scalar, 0.01 squared is already rounded down to 0).
+  assert((gravitational_constant == Scalar{} || min_distance_sqr_ > Scalar{}) &&
+         "with gravity on, min_distance must be strictly positive");
 }
 
 // the mass_ of the body must be strictly positive
@@ -35,15 +41,18 @@ void PhysicsWorld::RemoveBody(BodyId id) {
 
 void PhysicsWorld::Step(Scalar dt, bool stay_in_bounds) {
   events_.clear();
-  if (stay_in_bounds) {
-    BounceInBounds(dt);
-  }
   ApplyGravity();  // sum the forces
   Integrate(dt);   // velocity_, then position_
+  if (stay_in_bounds) {
+    BounceInBounds();  // looks at the new position_, reverses velocity_
+  }
   UpdateTriggers();
 }
 
 void PhysicsWorld::ApplyGravity() {
+  if (gravitational_constant_ == Scalar{}) {
+    return;  // no gravity: no force to sum, and no O(n^2) loop for nothing
+  }
   for (std::size_t i = 0; i < bodies_.size(); ++i) {
     for (std::size_t j = i + 1; j < bodies_.size(); ++j) {
       Body& a = bodies_[i];
@@ -94,31 +103,53 @@ void PhysicsWorld::Integrate(Scalar dt) {
 }
 
 void PhysicsWorld::UpdateTriggers() {
-  // 1. The pairs overlapping now. The loops go through (i, j) with i < j in
-  //    order, so `current` is already sorted: no sort needed.
-  std::vector<ColliderPair> current;
-  for (std::size_t i = 0; i < bodies_.size(); ++i) {
-    const auto& collider_a = bodies_[i].GetCollider();
-    if (!collider_a) {
-      continue;  // no collider: ignored
-    }
-    for (std::size_t j = i + 1; j < bodies_.size(); ++j) {
-      const auto& collider_b = bodies_[j].GetCollider();
-      if (!collider_b) {
-        continue;
-      }
-      // Like Unity: events only if at least one of the two is a trigger.
-      if (!collider_a->is_trigger && !collider_b->is_trigger) {
-        continue;
-      }
-      if (Overlap(*collider_a, bodies_[i].GetPosition(), *collider_b,
-                  bodies_[j].GetPosition())) {
-        current.emplace_back(static_cast<BodyId>(i), static_cast<BodyId>(j));
-      }
+  // 1. A collider knows its bodies: walk the colliders and gather one entry
+  //    per (body, collider) link.
+  entries_.clear();
+  for (const auto& collider : colliders_) {
+    for (const BodyId body_id : collider->GetBodies()) {
+      assert(static_cast<std::size_t>(body_id) < bodies_.size() &&
+             "a collider is linked to a body that does not exist");
+      entries_.push_back({body_id, collider.get()});
     }
   }
 
-  // 2. What changed since the previous step. Both lists are sorted, so one
+  // 2. The pairs overlapping now.
+  std::vector<ColliderPair> current;
+  const std::size_t count = entries_.size();
+  for (std::size_t i = 0; i < count; ++i) {
+    const ColliderEntry& entry_a = entries_[i];
+    const Collider& collider_a = *entry_a.collider;
+    // Read once per i: Overlap and emplace_back are calls the compiler cannot
+    // see into, it would reload them at every j.
+    const bool a_is_trigger = collider_a.IsTrigger();
+    const Vec2 position_a =
+        bodies_[static_cast<std::size_t>(entry_a.body_id)].GetPosition();
+    for (std::size_t j = i + 1; j < count; ++j) {
+      const ColliderEntry& entry_b = entries_[j];
+      if (entry_a.body_id == entry_b.body_id) {
+        continue;  // the same body linked twice: not a contact
+      }
+      // Like Unity: events only if at least one of the two is a trigger.
+      if (!a_is_trigger && !entry_b.collider->IsTrigger()) {
+        continue;
+      }
+      const Vec2& position_b =
+          bodies_[static_cast<std::size_t>(entry_b.body_id)].GetPosition();
+      if (Overlap(collider_a, position_a, *entry_b.collider, position_b)) {
+        current.emplace_back(entry_a.body_id, entry_b.body_id);
+      }
+    }
+  }
+  // The entries follow the order of the colliders, not the order of the ids:
+  // `current` is not sorted by construction anymore. Sort it (it only holds the
+  // overlapping pairs, a short list), and drop a pair found through two
+  // different colliders.
+  std::ranges::sort(current);
+  const auto duplicates = std::ranges::unique(current);
+  current.erase(duplicates.begin(), duplicates.end());
+
+  // 3. What changed since the previous step. Both lists are sorted, so one
   //    pass over each finds every change.
   std::vector<ColliderPair> entered;
   std::vector<ColliderPair> exited;
@@ -136,11 +167,8 @@ void PhysicsWorld::UpdateTriggers() {
 
   previous_overlaps_ = std::move(current);
 }
-void PhysicsWorld::BounceInBounds(Scalar dt) {
+void PhysicsWorld::BounceInBounds() {
   for (std::size_t i = 0; i < bodies_.size(); ++i) {
-    bodies_[i].SetPosition(bodies_[i].GetPosition() +
-                           bodies_[i].GetVelocity() * dt);
-
     if ((bodies_[i].GetVelocity().x() > Scalar{} &&
          bodies_[i].GetPosition().x() > bounds_.max_bound.x()) ||
         (bodies_[i].GetVelocity().x() < Scalar{} &&

@@ -4,13 +4,10 @@
 
 #ifndef GPR925PHYSICS_INCLUDE_GPR925_BODY_H_
 #define GPR925PHYSICS_INCLUDE_GPR925_BODY_H_
-#include <optional>
-
 #include "scalar.h"
 #include "vec2.h"
 #include "body_def.h"
 #include "body_utils.h"
-#include "collider.h"
 
 namespace gpr925 {
 
@@ -23,7 +20,6 @@ class Body{
     velocity_ = def.velocity;
     mass_ = def.mass;
     type_ = def.type;
-    collider_ = def.collider;
   }
 
   [[nodiscard]] Vec2 const& GetPosition() const { return position_; }
@@ -35,13 +31,6 @@ class Body{
   [[nodiscard]] Vec2 const& GetForce() const { return force_;}
   void SetForce(const Vec2& new_forces) { force_ = new_forces;}
 
-  [[nodiscard]] bool HasCollider() const { return collider_.has_value(); }
-  //since the collider is optional, returns optional with Get
-  [[nodiscard]] const std::optional<Collider>& GetCollider() const {
-    return collider_;
-  }
-  void SetCollider(const Collider& collider) { collider_ = collider; }
-  void RemoveCollider() { collider_.reset(); }
 
 
   // A force_ acts during the whole step: it changes the velocity_ by (F/m)*dt.
@@ -54,7 +43,6 @@ class Body{
   BodyType type_ = BodyType::kDynamic;
   // Sum of the forces applied since the last step. Cleared by the world.
   Vec2 force_{};
-  std::optional<Collider> collider_{};
 };
 
 } // namespace gpr925

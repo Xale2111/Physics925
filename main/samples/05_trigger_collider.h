@@ -6,6 +6,7 @@
 #include "gpr925/vec2.h"
 #include "gpr925/body.h"
 #include "gpr925/physics_world.h"
+#include "gpr925/collider_utils.h"
 
 #include "main/samples/sample.h"
 #include "main/samples/sample_config.h"
@@ -39,6 +40,7 @@ class TriggerCollider : public Sample {
   PhysicsWorld world_;
   // all the planet ids
   std::vector<BodyId> bodies_ids_;
+  std::vector<ColliderId> colliders_ids_;
   //since color isn't part of the physics, keep it outside
   std::vector<ColorId> bodies_colors_;
   //how many circles are overlapping with each other

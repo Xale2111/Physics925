@@ -1,10 +1,10 @@
 //
-// Created by alexk on 03.11.2026.
+// Unit tests for gpr925::Overlap (circle against circle).
 //
 
 #include <gtest/gtest.h>
 
-#include "gpr925/collider.h"
+#include "gpr925/circle_collider.h"
 #include "gpr925/collision.h"
 
 namespace gpr925 {
@@ -12,36 +12,8 @@ namespace {
 
 Vec2 V(int x, int y) { return Vec2{Ratio(x, 1), Ratio(y, 1)}; }
 
-Collider Circle(int radius, bool is_trigger = false) {
-  return MakeCircleCollider(Ratio(radius, 1), is_trigger);
-}
-
-// ============================================================
-// Collider
-// ============================================================
-
-TEST(ColliderTest, DefaultColliderShouldBeAnEmptySolidCircle) {
-  const Collider collider;
-  ASSERT_TRUE(std::holds_alternative<CircleShape>(collider.shape));
-  EXPECT_EQ(std::get<CircleShape>(collider.shape).radius, Scalar{});
-  EXPECT_EQ(collider.offset, Vec2{});
-  EXPECT_FALSE(collider.is_trigger);
-}
-
-TEST(ColliderTest, MakeCircleColliderShouldStoreItsArguments) {
-  const Collider collider =
-      MakeCircleCollider(Ratio(3, 2), true, Vec2{Ratio(1, 1), Ratio(2, 1)});
-  ASSERT_TRUE(std::holds_alternative<CircleShape>(collider.shape));
-  EXPECT_EQ(std::get<CircleShape>(collider.shape).radius, Ratio(3, 2));
-  EXPECT_EQ(collider.offset, V(1, 2));
-  EXPECT_TRUE(collider.is_trigger);
-}
-
-TEST(ColliderTest, ShouldBeAbleToHoldABox) {
-  Collider collider;
-  collider.shape = BoxShape{V(2, 1)};
-  ASSERT_TRUE(std::holds_alternative<BoxShape>(collider.shape));
-  EXPECT_EQ(std::get<BoxShape>(collider.shape).half_size, V(2, 1));
+CircleCollider Circle(int radius, bool is_trigger = false) {
+  return CircleCollider(Ratio(radius, 1), is_trigger);
 }
 
 // ============================================================
@@ -89,8 +61,8 @@ TEST(OverlapCircleTest, DifferentRadiiShouldBeAdded) {
 
 TEST(OverlapCircleTest, DiagonalDistanceShouldBeMeasuredOnBothAxes) {
   // Centers (1, 1) apart: distance about 1.414.
-  const Collider small = MakeCircleCollider(Ratio(1, 2));   // radii sum 1.0
-  const Collider big = MakeCircleCollider(Ratio(3, 4));     // radii sum 1.5
+  const CircleCollider small(Ratio(1, 2), false);   // radii sum 1.0
+  const CircleCollider big(Ratio(3, 4), false);     // radii sum 1.5
   EXPECT_FALSE(Overlap(small, V(0, 0), small, V(1, 1)));
   EXPECT_TRUE(Overlap(big, V(0, 0), big, V(1, 1)));
 }
@@ -128,14 +100,14 @@ TEST(OverlapCircleTest, TriggerFlagShouldNotChangeTheGeometry) {
 
 TEST(OverlapCircleTest, OffsetShouldMoveTheShapeAwayFromTheBody) {
   // The body of `a` is at the origin but its circle is centered on (3, 0).
-  const Collider a = MakeCircleCollider(Ratio(1, 1), false, V(3, 0));
+  const CircleCollider a(Ratio(1, 1), V(3, 0), false);
   EXPECT_TRUE(Overlap(a, V(0, 0), Circle(1), V(3, 0)));
   EXPECT_FALSE(Overlap(a, V(0, 0), Circle(1), V(0, 0)));
 }
 
 TEST(OverlapCircleTest, OffsetsOfBothColliderShouldBeApplied) {
-  const Collider a = MakeCircleCollider(Ratio(1, 1), false, V(2, 0));
-  const Collider b = MakeCircleCollider(Ratio(1, 1), false, V(-2, 0));
+  const CircleCollider a(Ratio(1, 1), V(2, 0), false);
+  const CircleCollider b(Ratio(1, 1), V(-2, 0), false);
   // Centers: (2, 0) and (4 - 2, 0) = (2, 0): they coincide.
   EXPECT_TRUE(Overlap(a, V(0, 0), b, V(4, 0)));
   EXPECT_FALSE(Overlap(a, V(0, 0), b, V(10, 0)));
