@@ -53,6 +53,7 @@ class PhysicsWorld {
   }
   [[nodiscard]] Body& GetBody(BodyId id) { return bodies_[static_cast<size_t>(id)]; }
   [[nodiscard]] const Body& GetBody(BodyId id) const { return bodies_[static_cast<size_t>(id)]; }
+  [[nodiscard]] std::optional<ColliderType> GetColliderTypeWithBodyId(BodyId id) const;
   [[nodiscard]] std::size_t CountBody() const { return bodies_.size(); }
   [[nodiscard]] std::size_t CountCollider() const { return colliders_.size(); }
 

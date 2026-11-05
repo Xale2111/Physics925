@@ -39,6 +39,16 @@ void PhysicsWorld::RemoveBody(BodyId id) {
   auto temp = id;
 }*/
 
+std::optional<ColliderType> PhysicsWorld::GetColliderTypeWithBodyId(BodyId id) const {
+  for (const auto& collider : colliders_) {
+    const std::vector<BodyId>& bodies = collider->GetBodies();
+    if (std::ranges::find(bodies, id) != bodies.end()) {
+      return collider->GetType();
+    }
+  }
+  return std::nullopt;  // no collider is linked to this body
+}
+
 void PhysicsWorld::Step(Scalar dt, bool stay_in_bounds) {
   events_.clear();
   ApplyGravity();  // sum the forces
@@ -185,5 +195,6 @@ void PhysicsWorld::BounceInBounds() {
     }
   }
 }
+
 
 }  // namespace gpr925
