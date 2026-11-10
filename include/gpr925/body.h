@@ -31,8 +31,6 @@ class Body{
   [[nodiscard]] Vec2 const& GetForce() const { return force_;}
   void SetForce(const Vec2& new_forces) { force_ = new_forces;}
 
-
-
   // A force_ acts during the whole step: it changes the velocity_ by (F/m)*dt.
   void ApplyForce(Vec2 applied_force) { force_ += applied_force; }
 
@@ -40,9 +38,9 @@ class Body{
   Vec2 position_{};
   Vec2 velocity_{};
   Scalar mass_{};
-  BodyType type_ = BodyType::kDynamic;
   // Sum of the forces applied since the last step. Cleared by the world.
   Vec2 force_{};
+  BodyType type_{};
 };
 
 } // namespace gpr925

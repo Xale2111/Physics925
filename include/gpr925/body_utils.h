@@ -11,7 +11,7 @@ namespace gpr925{
 // Using size_t to have access to the bodies by index.
 enum class BodyId : std::size_t;
 
-enum class BodyType {
+enum class BodyType : std::uint8_t {
   kStatic,   // the object does not move
   kDynamic,  // forces are applied to it
 };

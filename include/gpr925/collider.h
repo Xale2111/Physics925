@@ -9,6 +9,7 @@
 
 #include "body_utils.h"
 #include "collider_utils.h"
+#include "gpr925/physics_material.h"
 #include "scalar.h"
 #include "vec2.h"
 
@@ -25,6 +26,8 @@ class Collider {
   [[nodiscard]] const Vec2& GetOffset() const { return offset_; }
   // Works like Unity IsTrigger (true -> sensor, false -> physical collider)
   [[nodiscard]] bool IsTrigger() const { return is_trigger_; }
+  [[nodiscard]] const PhysicsMaterial& GetMaterial() const { return material_; }
+  void SetMaterial(const PhysicsMaterial& material) { material_ = material; }
 
   void AddBody(BodyId body_id) { bodies_ids_.push_back(body_id); }
 
@@ -36,17 +39,18 @@ class Collider {
   }
 
  protected:
-  Collider(ColliderType type, Vec2 offset, bool is_trigger) : type_(type), offset_(offset), is_trigger_(is_trigger) {}
   Collider(const Collider&) = default;
   Collider(Collider&&) = default;
   Collider& operator=(const Collider&) = default;
   Collider& operator=(Collider&&) = default;
+  Collider(ColliderType type, Vec2 offset, bool is_trigger, PhysicsMaterial material = {}) : type_(type), offset_(offset), is_trigger_(is_trigger), material_(material) {}
 
  private:
-  ColliderType type_;
+  ColliderType type_ : 2;
   Vec2 offset_;
-  bool is_trigger_;
   std::vector<BodyId> bodies_ids_;
+  bool is_trigger_;           //THIS WILL ALIGN WITH 8 BYTES
+  PhysicsMaterial material_;
 };
 
 }  // namespace gpr925

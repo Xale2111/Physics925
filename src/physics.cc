@@ -17,11 +17,6 @@ PhysicsWorld::PhysicsWorld(Scalar gravitational_constant, Scalar min_distance,
   min_distance_sqr_ = min_distance * min_distance;
   bounds_ = bounds;
   bodies_.reserve(size_to_reserve);
-  // ApplyGravity divides by the squared distance: with gravity on, the minimum
-  // distance must be big enough for its square to be more than zero (with a
-  // fixed point scalar, 0.01 squared is already rounded down to 0).
-  assert((gravitational_constant == Scalar{} || min_distance_sqr_ > Scalar{}) &&
-         "with gravity on, min_distance must be strictly positive");
 }
 
 // the mass_ of the body must be strictly positive
@@ -40,13 +35,21 @@ void PhysicsWorld::RemoveBody(BodyId id) {
 }*/
 
 std::optional<ColliderType> PhysicsWorld::GetColliderTypeWithBodyId(BodyId id) const {
+  const Collider* collider = GetColliderWithBodyId(id);
+  if (collider == nullptr) {
+    return std::nullopt;
+  }
+  return collider->GetType();
+}
+
+const Collider* PhysicsWorld::GetColliderWithBodyId(BodyId id) const {
   for (const auto& collider : colliders_) {
     const std::vector<BodyId>& bodies = collider->GetBodies();
     if (std::ranges::find(bodies, id) != bodies.end()) {
-      return collider->GetType();
+      return collider.get();
     }
   }
-  return std::nullopt;  // no collider is linked to this body
+  return nullptr;  // no collider is linked to this body
 }
 
 void PhysicsWorld::Step(Scalar dt, bool stay_in_bounds) {
@@ -56,6 +59,8 @@ void PhysicsWorld::Step(Scalar dt, bool stay_in_bounds) {
   if (stay_in_bounds) {
     BounceInBounds();  // looks at the new position_, reverses velocity_
   }
+  BuildEntries();
+  ResolveCollisions();
   UpdateTriggers();
 }
 
@@ -113,17 +118,6 @@ void PhysicsWorld::Integrate(Scalar dt) {
 }
 
 void PhysicsWorld::UpdateTriggers() {
-  // 1. A collider knows its bodies: walk the colliders and gather one entry
-  //    per (body, collider) link.
-  entries_.clear();
-  for (const auto& collider : colliders_) {
-    for (const BodyId body_id : collider->GetBodies()) {
-      assert(static_cast<std::size_t>(body_id) < bodies_.size() &&
-             "a collider is linked to a body that does not exist");
-      entries_.push_back({body_id, collider.get()});
-    }
-  }
-
   // 2. The pairs overlapping now.
   std::vector<ColliderPair> current;
   const std::size_t count = entries_.size();
@@ -196,5 +190,67 @@ void PhysicsWorld::BounceInBounds() {
   }
 }
 
+void PhysicsWorld::BuildEntries() {
+  entries_.clear();
+  for (const auto& collider : colliders_) {
+    for (const BodyId body_id : collider->GetBodies()) {
+      entries_.push_back({body_id, collider.get()});
+    }
+  }
+}
+
+void PhysicsWorld::ResolveCollisions() {
+  for (std::size_t i = 0; i < entries_.size(); ++i) {
+    for (std::size_t j = i + 1; j < entries_.size(); ++j) {
+      const ColliderEntry& ea = entries_[i];
+      const ColliderEntry& eb = entries_[j];
+      if (ea.body_id == eb.body_id) continue;
+      if (ea.collider->IsTrigger() || eb.collider->IsTrigger()) continue;
+
+      Body& a = GetBody(ea.body_id);
+      Body& b = GetBody(eb.body_id);
+      const auto contact = GenerateContact(*ea.collider, a.GetPosition(),
+                                           *eb.collider, b.GetPosition());
+      if (contact) {
+        const Scalar restitution = CombineBounciness(ea.collider->GetMaterial(),
+                                                     eb.collider->GetMaterial());
+        ResolveContact(a, b, *contact, restitution);
+      }
+    }
+  }
+}
+
+
+void PhysicsWorld::ResolveContact(Body& a, Body& b, const Contact& contact, Scalar restitution) {
+  const bool a_static = a.GetBodyType() == BodyType::kStatic;
+  const bool b_static = b.GetBodyType() == BodyType::kStatic;
+  if (a_static && b_static) return;  // nothing can move
+
+  //Check if one of the bodies is static, if so, the other one will get restitution of 1
+  //if none are static, we calculate the restitution each should have depending on the mass of the two bodies
+  Scalar share_a = Scalar{1};
+  Scalar share_b = Scalar{1};
+  if (a_static) {
+    share_a = Scalar{};
+  } else if (b_static) {
+    share_b = Scalar{};
+  } else {
+    const Scalar total_mass = a.GetMass() + b.GetMass();
+    share_a = b.GetMass() / total_mass;
+    share_b = a.GetMass() / total_mass;
+  }
+
+  //Setting the velocity of the two bodies depending on the current velocity + the restitution * the normal of the contact
+  const Scalar separating_speed = Vec2::Dot(b.GetVelocity() - a.GetVelocity(), contact.normal);
+  if (separating_speed < Scalar{}) {
+    const Scalar delta_velocity = (Scalar{1} + restitution) * separating_speed;
+    a.SetVelocity(a.GetVelocity() + contact.normal * (delta_velocity * share_a));
+    b.SetVelocity(b.GetVelocity() - contact.normal * (delta_velocity * share_b));
+  }
+
+  //Setting the position of the bodies so they are not overlapping anymore
+  a.SetPosition(a.GetPosition() - contact.normal * (contact.penetration * share_a));
+  b.SetPosition(b.GetPosition() + contact.normal * (contact.penetration * share_b));
+}
 
 }  // namespace gpr925
