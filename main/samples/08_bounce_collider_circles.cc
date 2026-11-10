@@ -15,8 +15,8 @@ constexpr Scalar kMaxBodySpeed = Ratio(3, 1);
 // Distance between the frame lines and the edge of the world
 constexpr Vec2 kFrameMargin{Ratio(1, 5), Ratio(1, 5)};
 
-constexpr Scalar kMinBodyRadius = Ratio(1, 10);
-constexpr Scalar kMaxBodyRadius = Ratio(3, 10);
+constexpr Scalar kSizeRatio = Ratio(1, 10);
+
 constexpr Scalar kMinBounciness = Ratio(0, 1);
 constexpr Scalar kMaxBounciness = Ratio(1, 1);
 
@@ -30,7 +30,8 @@ constexpr Scalar kMaxPlanetMass = Ratio(3, 1);
 void BounceColliderCircles::Begin(const SampleContext& context) {
   bounds_ = context.world_bounds;
 
-  world_ = PhysicsWorld(Scalar{}, Scalar{}, bounds_,sample_config::kBouncingElements);
+  world_ = PhysicsWorld(Scalar{}, Scalar{}, bounds_,
+                        sample_config::kBouncingElements);
   bodies_ids_.reserve(sample_config::kBouncingElements);
   bodies_colors_.reserve(sample_config::kBouncingElements);
 
@@ -38,12 +39,17 @@ void BounceColliderCircles::Begin(const SampleContext& context) {
 
   // it; we only keep a reference to link the bodies while we create them.
   for (std::size_t i = 0; i < sample_config::kBouncingElements; ++i) {
-  CircleCollider& collider = world_.CreateCollider<CircleCollider>(rng.Range(kMinBodyRadius, kMaxBodyRadius), false, PhysicsMaterial{Scalar{rng.Range(kMinBounciness, kMaxBounciness)}});
+    Scalar mass = rng.Range(kMinPlanetMass, kMaxPlanetMass);
+    CircleCollider& collider = world_.CreateCollider<CircleCollider>(
+        mass * kSizeRatio, false,
+        PhysicsMaterial{Scalar{rng.Range(kMinBounciness, kMaxBounciness)}});
     BodyDef def;
-    def.position = {rng.Range(bounds_.min_bound.x(), bounds_.max_bound.x()),rng.Range(bounds_.min_bound.y(), bounds_.max_bound.y())};
-    def.mass = rng.Range(kMinPlanetMass, kMaxPlanetMass);
+    def.position = {rng.Range(bounds_.min_bound.x(), bounds_.max_bound.x()),
+                    rng.Range(bounds_.min_bound.y(), bounds_.max_bound.y())};
+    def.mass = mass;
 
-    Vec2 direction{rng.Range(-kMaxBodySpeed, kMaxBodySpeed),rng.Range(-kMaxBodySpeed, kMaxBodySpeed)};
+    Vec2 direction{rng.Range(-kMaxBodySpeed, kMaxBodySpeed),
+                   rng.Range(-kMaxBodySpeed, kMaxBodySpeed)};
     def.velocity = direction.Normalize() * def.mass;
 
     def.type = BodyType::kDynamic;
@@ -66,8 +72,10 @@ void BounceColliderCircles::Draw(DrawList& draw_list) const {
   for (std::size_t i = 0; i < bodies_ids_.size(); ++i) {
     const Body& body = world_.GetBody(bodies_ids_[i]);
     const Collider* collider = world_.GetColliderWithBodyId(bodies_ids_[i]);
-    const Scalar radius = static_cast<const CircleCollider&>(*collider).GetRadius();
-    draw_list.circles.push_back({body.GetPosition(), radius, bodies_colors_[i]});
+    const Scalar radius =
+        static_cast<const CircleCollider&>(*collider).GetRadius();
+    draw_list.circles.push_back(
+        {body.GetPosition(), radius, bodies_colors_[i]});
   }
 
   const Vec2 top_left = bounds_.min_bound + kFrameMargin;

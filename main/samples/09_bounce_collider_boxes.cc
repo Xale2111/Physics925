@@ -15,8 +15,7 @@ constexpr Scalar kMaxBodySpeed = Ratio(3, 1);
 // Distance between the frame lines and the edge of the world
 constexpr Vec2 kFrameMargin{Ratio(1, 5), Ratio(1, 5)};
 
-constexpr Scalar kMinBoxHalfSize{Ratio(1, 20)};
-constexpr Scalar kMaxBoxHalfSize{Ratio(5, 20)};
+constexpr Scalar kSizeRatio = Ratio(1, 10);
 
 constexpr Scalar kMinBounciness = Ratio(0, 1);
 constexpr Scalar kMaxBounciness = Ratio(1, 1);
@@ -38,12 +37,15 @@ void BounceColliderBoxes::Begin(const SampleContext& context) {
   SampleRng rng{kSeed};
 
   for (std::size_t i = 0; i < sample_config::kBouncingElements; ++i) {
-    const Scalar kBoxHalfSize = rng.Range(kMinBoxHalfSize, kMaxBoxHalfSize);
+
+    Scalar mass = rng.Range(kMinPlanetMass, kMaxPlanetMass);
+
+    const Scalar kBoxHalfSize = kSizeRatio * mass;
     BoxCollider& collider = world_.CreateCollider<BoxCollider>(Vec2{-kBoxHalfSize,-kBoxHalfSize}, Vec2{kBoxHalfSize,kBoxHalfSize}, false,PhysicsMaterial{Scalar{rng.Range(kMinBounciness, kMaxBounciness)}});
     BodyDef def;
     def.position = {rng.Range(bounds_.min_bound.x(), bounds_.max_bound.x()),
                     rng.Range(bounds_.min_bound.y(), bounds_.max_bound.y())};
-    def.mass = rng.Range(kMinPlanetMass, kMaxPlanetMass);
+    def.mass = mass;
 
     Vec2 direction{rng.Range(-kMaxBodySpeed, kMaxBodySpeed),
                    rng.Range(-kMaxBodySpeed, kMaxBodySpeed)};
