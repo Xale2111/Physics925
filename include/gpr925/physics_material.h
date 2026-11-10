@@ -10,8 +10,6 @@
 namespace gpr925 {
 
 // Surface properties of a collider, like Unity's PhysicsMaterial.
-// It is a small plain value (two scalars), so we copy it instead of sharing
-// pointers: no ownership, no lifetime issue, nothing to allocate on the DS.
 struct PhysicsMaterial {
   Scalar bounciness{};  // restitution coefficient e, kept in [0, 1]
   Scalar friction{};    // stored for later, not used by the solver yet
