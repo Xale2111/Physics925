@@ -20,6 +20,7 @@
 #include "collider_pair.h"
 #include "collision.h"
 #include "trigger_event.h"
+#include "quadtree.h"
 
 namespace gpr925 {
 
@@ -46,6 +47,8 @@ class PhysicsWorld {
     colliders_.clear();  // they point to bodies that no longer exist
     previous_overlaps_.clear();
     events_.clear();
+    quadtree_ = QuadTree {};
+    candidate_pairs_.clear();
   }
 
   void ReserveBodyVectorSize(size_t size_to_reserve) {
@@ -62,6 +65,8 @@ class PhysicsWorld {
   [[nodiscard]] std::span<const TriggerEvent> TriggerEvents() const {
     return events_;
   }
+
+  [[nodiscard]] const QuadTree& GetQuadTree() const { return quadtree_; }
 
   // One fixed step: gather the forces, then integrate.
   void Step(Scalar dt, bool stay_in_bounds = false);
@@ -82,6 +87,8 @@ class PhysicsWorld {
   void ResolveCollisions();
   void ResolveContact(Body& a, Body& b, const Contact& contact, Scalar restitution);
 
+  void BuildBroadphase();
+
   std::vector<Body> bodies_;
   Scalar gravitational_constant_{};
   Scalar min_distance_sqr_{};
@@ -93,7 +100,8 @@ class PhysicsWorld {
   //last step overlapping bodies
   std::vector<ColliderPair> previous_overlaps_;
   std::vector<TriggerEvent> events_;
-
+  QuadTree quadtree_;
+  std::vector<BroadphasePair> candidate_pairs_;
 };
 
 }  // namespace gpr925

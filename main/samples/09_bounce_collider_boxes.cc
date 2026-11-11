@@ -68,6 +68,19 @@ void BounceColliderBoxes::FixedUpdate(const Input& input) {
 }
 
 void BounceColliderBoxes::Draw(DrawList& draw_list) const {
+  #ifndef GPR925_PLATFORM_NDS
+    // Outline of every quadtree node. PC only: the DS does not get these lines.
+    auto draw_node = [&draw_list](const Rect& node) {
+      const Vec2 top_right{node.max_bound.x(), node.min_bound.y()};
+      const Vec2 bottom_left{node.min_bound.x(), node.max_bound.y()};
+      draw_list.lines.push_back({node.min_bound, top_right, sample_color::kGrey});
+      draw_list.lines.push_back({top_right, node.max_bound, sample_color::kGrey});
+      draw_list.lines.push_back({node.max_bound, bottom_left, sample_color::kGrey});
+      draw_list.lines.push_back({bottom_left, node.min_bound, sample_color::kGrey});
+    };
+    world_.GetQuadTree().ForEachNode(draw_node);
+  #endif
+
   for (std::size_t i = 0; i < bodies_ids_.size(); ++i) {
     const Body& body = world_.GetBody(bodies_ids_[i]);
     const Collider* collider = world_.GetColliderWithBodyId(bodies_ids_[i]);

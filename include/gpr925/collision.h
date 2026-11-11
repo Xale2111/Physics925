@@ -41,6 +41,8 @@ struct Contact {
 
 [[nodiscard]] Scalar CombineBounciness(const PhysicsMaterial& a, const PhysicsMaterial& b);
 
+[[nodiscard]] Rect ComputeAabb(const Collider& collider, const Vec2& position);
+
 }  // namespace gpr925
 
 #endif  // GPR925PHYSICS_INCLUDE_GPR925_COLLISION_H_

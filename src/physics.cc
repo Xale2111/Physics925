@@ -60,6 +60,7 @@ void PhysicsWorld::Step(Scalar dt, bool stay_in_bounds) {
     BounceInBounds();  // looks at the new position_, reverses velocity_
   }
   BuildEntries();
+  BuildBroadphase();
   ResolveCollisions();
   UpdateTriggers();
 }
@@ -118,31 +119,16 @@ void PhysicsWorld::Integrate(Scalar dt) {
 }
 
 void PhysicsWorld::UpdateTriggers() {
-  // 2. The pairs overlapping now.
   std::vector<ColliderPair> current;
-  const std::size_t count = entries_.size();
-  for (std::size_t i = 0; i < count; ++i) {
-    const ColliderEntry& entry_a = entries_[i];
-    const Collider& collider_a = *entry_a.collider;
-    // Read once per i: Overlap and emplace_back are calls the compiler cannot
-    // see into, it would reload them at every j.
-    const bool a_is_trigger = collider_a.IsTrigger();
-    const Vec2 position_a =
-        bodies_[static_cast<std::size_t>(entry_a.body_id)].GetPosition();
-    for (std::size_t j = i + 1; j < count; ++j) {
-      const ColliderEntry& entry_b = entries_[j];
-      if (entry_a.body_id == entry_b.body_id) {
-        continue;  // the same body linked twice: not a contact
-      }
-      // Like Unity: events only if at least one of the two is a trigger.
-      if (!a_is_trigger && !entry_b.collider->IsTrigger()) {
-        continue;
-      }
-      const Vec2& position_b =
-          bodies_[static_cast<std::size_t>(entry_b.body_id)].GetPosition();
-      if (Overlap(collider_a, position_a, *entry_b.collider, position_b)) {
-        current.emplace_back(entry_a.body_id, entry_b.body_id);
-      }
+  for (const BroadphasePair& pair : candidate_pairs_) {
+    const ColliderEntry& entry_a = entries_[pair.first];
+    const ColliderEntry& entry_b = entries_[pair.second];
+    if (entry_a.body_id == entry_b.body_id) continue;
+    if (!entry_a.collider->IsTrigger() && !entry_b.collider->IsTrigger()) continue;
+    const Vec2& position_a = bodies_[static_cast<std::size_t>(entry_a.body_id)].GetPosition();
+    const Vec2& position_b = bodies_[static_cast<std::size_t>(entry_b.body_id)].GetPosition();
+    if (Overlap(*entry_a.collider, position_a, *entry_b.collider, position_b)) {
+      current.emplace_back(entry_a.body_id, entry_b.body_id);
     }
   }
   // The entries follow the order of the colliders, not the order of the ids:
@@ -200,26 +186,21 @@ void PhysicsWorld::BuildEntries() {
 }
 
 void PhysicsWorld::ResolveCollisions() {
-  for (std::size_t i = 0; i < entries_.size(); ++i) {
-    for (std::size_t j = i + 1; j < entries_.size(); ++j) {
-      const ColliderEntry& ea = entries_[i];
-      const ColliderEntry& eb = entries_[j];
-      if (ea.body_id == eb.body_id) continue;
-      if (ea.collider->IsTrigger() || eb.collider->IsTrigger()) continue;
+  for (const BroadphasePair& pair : candidate_pairs_) {
+    const ColliderEntry& ea = entries_[pair.first];
+    const ColliderEntry& eb = entries_[pair.second];
+    if (ea.body_id == eb.body_id) continue;
+    if (ea.collider->IsTrigger() || eb.collider->IsTrigger()) continue;
 
-      Body& a = GetBody(ea.body_id);
-      Body& b = GetBody(eb.body_id);
-      const auto contact = GenerateContact(*ea.collider, a.GetPosition(),
-                                           *eb.collider, b.GetPosition());
-      if (contact) {
-        const Scalar restitution = CombineBounciness(ea.collider->GetMaterial(),
-                                                     eb.collider->GetMaterial());
-        ResolveContact(a, b, *contact, restitution);
-      }
+    Body& a = GetBody(ea.body_id);
+    Body& b = GetBody(eb.body_id);
+    const auto contact = GenerateContact(*ea.collider, a.GetPosition(), *eb.collider, b.GetPosition());
+    if (contact) {
+      const Scalar restitution = CombineBounciness(ea.collider->GetMaterial(), eb.collider->GetMaterial());
+      ResolveContact(a, b, *contact, restitution);
     }
   }
 }
-
 
 void PhysicsWorld::ResolveContact(Body& a, Body& b, const Contact& contact, Scalar restitution) {
   const bool a_static = a.GetBodyType() == BodyType::kStatic;
@@ -251,6 +232,18 @@ void PhysicsWorld::ResolveContact(Body& a, Body& b, const Contact& contact, Scal
   //Setting the position of the bodies so they are not overlapping anymore
   a.SetPosition(a.GetPosition() - contact.normal * (contact.penetration * share_a));
   b.SetPosition(b.GetPosition() + contact.normal * (contact.penetration * share_b));
+}
+
+void PhysicsWorld::BuildBroadphase() {
+  // Rebuilt from scratch every step: the bodies moved. (Naive: this allocates.)
+  quadtree_ = QuadTree(bounds_, 0);
+  for (std::size_t i = 0; i < entries_.size(); ++i) {
+    const ColliderEntry& entry = entries_[i];
+    const Vec2& position = bodies_[static_cast<std::size_t>(entry.body_id)].GetPosition();
+    quadtree_.Insert({i, ComputeAabb(*entry.collider, position)});  // id = index in entries_
+  }
+  candidate_pairs_.clear();  // keeps its capacity: no allocation after the first steps
+  quadtree_.GeneratePairs(candidate_pairs_);
 }
 
 }  // namespace gpr925

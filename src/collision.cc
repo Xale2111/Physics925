@@ -177,4 +177,20 @@ std::optional<Contact> GenerateContact(const Collider& a, const Vec2& position_a
   return std::nullopt;
 }
 
+Rect ComputeAabb(const Collider& collider, const Vec2& position) {
+  Rect aabb;
+  if (collider.GetType() == ColliderType::kCircle) {
+    const CircleCollider& circle = static_cast<const CircleCollider&>(collider);
+    const Vec2 center = position + circle.GetOffset();
+    const Vec2 radius{circle.GetRadius(), circle.GetRadius()};
+    aabb.min_bound = center - radius;
+    aabb.max_bound = center + radius;
+  } else {
+    const BoxCollider& box = static_cast<const BoxCollider&>(collider);
+    aabb.min_bound = position + box.GetOffset() + box.GetMin();
+    aabb.max_bound = position + box.GetOffset() + box.GetMax();
+  }
+  return aabb;
+}
+
 }  // namespace gpr925
