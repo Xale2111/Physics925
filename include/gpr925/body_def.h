@@ -19,6 +19,11 @@ struct BodyDef {
   BodyType type = BodyType::kDynamic;
   //if there's no collider, then the body can't have contact with anything (same logic as in Unity)
 
+  Scalar angle{};
+  Scalar angular_velocity{};
+
+  Scalar inertia{};
+
 };
 }  // namespace gpr925
 #endif  // GPR925PHYSICS_INCLUDE_GPR925_BODYDEF_H_

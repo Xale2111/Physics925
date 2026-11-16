@@ -21,6 +21,7 @@
 #include "collision.h"
 #include "trigger_event.h"
 #include "quadtree.h"
+#include "contact_resolution.h"
 
 namespace gpr925 {
 

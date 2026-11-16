@@ -5,11 +5,12 @@
 #ifndef GPR925PHYSICS_INCLUDE_GPR925_COLLIDER_UTILS_H_
 #define GPR925PHYSICS_INCLUDE_GPR925_COLLIDER_UTILS_H_
 #include <cstddef>
+#include <cstdint>
 
 namespace gpr925 {
 // Using size_t to have access to the Colliders by index.
 enum class ColliderId : std::size_t;
-enum class ColliderType : std::uint8_t { kCircle, kBox };
+enum class ColliderType : std::uint8_t { kCircle, kBox, kOrientedBox };
 
 }
 #endif  // GPR925PHYSICS_INCLUDE_GPR925_COLLIDER_UTILS_H_

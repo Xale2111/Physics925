@@ -11,12 +11,13 @@
 #include "main/samples/09_bounce_collider_boxes.h"
 #include "main/samples/10_bounce_collider_shapes.h"
 #include "main/samples/11_ground_bounce.h"
+#include "main/samples/12_rolling_circle.h"
 
 namespace gpr925 {
 
 SampleRegistry::SampleRegistry() {
   // Register your samples here: bump the reserve and add a push_back
-  samples_.reserve(11);
+  samples_.reserve(12);
   samples_.push_back({"01 Hello", std::make_unique<HelloSample>()});
   samples_.push_back({"02 Planets", std::make_unique<PlanetSample>()});
   samples_.push_back({"03 Planets AoSoA", std::make_unique<PlanetAoSoaSample>()});
@@ -28,6 +29,7 @@ SampleRegistry::SampleRegistry() {
   samples_.push_back({"09 Bounce Collider Boxes", std::make_unique<BounceColliderBoxes>()});
   samples_.push_back({"10 Bounce Collider Shapes", std::make_unique<BounceColliderShapes>()});
   samples_.push_back({"11 Ground Bounce", std::make_unique<GroundBounce>()});
+  samples_.push_back({"12 Rolling Circle", std::make_unique<RollingCircle>()});
 
 }
 

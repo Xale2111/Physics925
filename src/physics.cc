@@ -7,6 +7,7 @@
 #include <iterator>
 
 #include "gpr925/collision.h"
+#include "gpr925/contact_resolution.h"
 #include "gpr925/physics_world.h"
 
 namespace gpr925 {
@@ -115,6 +116,18 @@ void PhysicsWorld::Integrate(Scalar dt) {
                      body.GetVelocity() * dt);  // then position_, new velocity_
 
     body.SetForce(Vec2{});  // reset forces
+
+    // Rotation: the same recipe, with the angular quantities.
+    // Second law of rotation: angular acceleration = torque / I.
+    // I == 0 means "this body does not rotate" (and avoids dividing by zero).
+    if (body.GetInertia() > Scalar{}) {
+      const Scalar angular_acceleration = body.GetTorque() / body.GetInertia();
+      body.SetAngularVelocity(body.GetAngularVelocity() +
+                              angular_acceleration * dt);  // omega first
+      body.SetAngle(body.GetAngle() +
+                    body.GetAngularVelocity() * dt);  // then the angle, new omega
+    }
+    body.SetTorque(Scalar{});  // reset torque
   }
 }
 
@@ -125,9 +138,10 @@ void PhysicsWorld::UpdateTriggers() {
     const ColliderEntry& entry_b = entries_[pair.second];
     if (entry_a.body_id == entry_b.body_id) continue;
     if (!entry_a.collider->IsTrigger() && !entry_b.collider->IsTrigger()) continue;
-    const Vec2& position_a = bodies_[static_cast<std::size_t>(entry_a.body_id)].GetPosition();
-    const Vec2& position_b = bodies_[static_cast<std::size_t>(entry_b.body_id)].GetPosition();
-    if (Overlap(*entry_a.collider, position_a, *entry_b.collider, position_b)) {
+    const Body& body_a = bodies_[static_cast<std::size_t>(entry_a.body_id)];
+    const Body& body_b = bodies_[static_cast<std::size_t>(entry_b.body_id)];
+    if (Overlap(*entry_a.collider, body_a.GetPosition(), body_a.GetAngle(),
+                *entry_b.collider, body_b.GetPosition(), body_b.GetAngle())) {
       current.emplace_back(entry_a.body_id, entry_b.body_id);
     }
   }
@@ -194,44 +208,14 @@ void PhysicsWorld::ResolveCollisions() {
 
     Body& a = GetBody(ea.body_id);
     Body& b = GetBody(eb.body_id);
-    const auto contact = GenerateContact(*ea.collider, a.GetPosition(), *eb.collider, b.GetPosition());
+    const auto contact = GenerateContact(*ea.collider, a.GetPosition(), a.GetAngle(),
+                                         *eb.collider, b.GetPosition(), b.GetAngle());
     if (contact) {
       const Scalar restitution = CombineBounciness(ea.collider->GetMaterial(), eb.collider->GetMaterial());
-      ResolveContact(a, b, *contact, restitution);
+      const Scalar friction = CombineFriction(ea.collider->GetMaterial(), eb.collider->GetMaterial());
+      gpr925::ResolveContact(a, b, *contact, restitution, friction);  // contact_resolution.h
     }
   }
-}
-
-void PhysicsWorld::ResolveContact(Body& a, Body& b, const Contact& contact, Scalar restitution) {
-  const bool a_static = a.GetBodyType() == BodyType::kStatic;
-  const bool b_static = b.GetBodyType() == BodyType::kStatic;
-  if (a_static && b_static) return;  // nothing can move
-
-  //Check if one of the bodies is static, if so, the other one will get restitution of 1
-  //if none are static, we calculate the restitution each should have depending on the mass of the two bodies
-  Scalar share_a = Scalar{1};
-  Scalar share_b = Scalar{1};
-  if (a_static) {
-    share_a = Scalar{};
-  } else if (b_static) {
-    share_b = Scalar{};
-  } else {
-    const Scalar total_mass = a.GetMass() + b.GetMass();
-    share_a = b.GetMass() / total_mass;
-    share_b = a.GetMass() / total_mass;
-  }
-
-  //Setting the velocity of the two bodies depending on the current velocity + the restitution * the normal of the contact
-  const Scalar separating_speed = Vec2::Dot(b.GetVelocity() - a.GetVelocity(), contact.normal);
-  if (separating_speed < Scalar{}) {
-    const Scalar delta_velocity = (Scalar{1} + restitution) * separating_speed;
-    a.SetVelocity(a.GetVelocity() + contact.normal * (delta_velocity * share_a));
-    b.SetVelocity(b.GetVelocity() - contact.normal * (delta_velocity * share_b));
-  }
-
-  //Setting the position of the bodies so they are not overlapping anymore
-  a.SetPosition(a.GetPosition() - contact.normal * (contact.penetration * share_a));
-  b.SetPosition(b.GetPosition() + contact.normal * (contact.penetration * share_b));
 }
 
 void PhysicsWorld::BuildBroadphase() {
@@ -239,8 +223,8 @@ void PhysicsWorld::BuildBroadphase() {
   quadtree_ = QuadTree(bounds_, 0);
   for (std::size_t i = 0; i < entries_.size(); ++i) {
     const ColliderEntry& entry = entries_[i];
-    const Vec2& position = bodies_[static_cast<std::size_t>(entry.body_id)].GetPosition();
-    quadtree_.Insert({i, ComputeAabb(*entry.collider, position)});  // id = index in entries_
+    const Body& body = bodies_[static_cast<std::size_t>(entry.body_id)];
+    quadtree_.Insert({i, ComputeAabb(*entry.collider, body.GetPosition(), body.GetAngle())});  // id = index in entries_
   }
   candidate_pairs_.clear();  // keeps its capacity: no allocation after the first steps
   quadtree_.GeneratePairs(candidate_pairs_);

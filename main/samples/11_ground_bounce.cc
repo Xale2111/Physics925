@@ -20,8 +20,8 @@ constexpr Scalar kMass = Ratio(1, 1);
 constexpr Scalar kGravity = Ratio(981, 100);
 
 //Material bounciness. Bounce is average of the two
-constexpr Scalar kBallBounciness = Ratio(1, 2);
-constexpr Scalar kBoxBounciness = Ratio(1, 1);
+constexpr Scalar kBallBounciness = Ratio(1, 2);   //.5
+constexpr Scalar kBoxBounciness = Ratio(9, 10);   //.9
 constexpr Scalar kGroundBounciness = Ratio(1, 1);
 
 // Push a box in the boxes drawlist

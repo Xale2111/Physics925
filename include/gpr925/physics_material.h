@@ -11,8 +11,8 @@ namespace gpr925 {
 
 // Surface properties of a collider, like Unity's PhysicsMaterial.
 struct PhysicsMaterial {
-  Scalar bounciness{};  // restitution coefficient e, kept in [0, 1]
-  Scalar friction{};    // stored for later, not used by the solver yet
+  Scalar bounciness{};  //restitution coefficient e, kept in [0, 1]
+  Scalar friction{};    //Friction coefficient, kept in [0, 1]
 
   constexpr PhysicsMaterial() = default;
   constexpr PhysicsMaterial(Scalar bounciness_in, Scalar friction_in = Scalar{})
