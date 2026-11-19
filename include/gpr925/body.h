@@ -36,6 +36,7 @@ class Body{
 
   // A force_ acts during the whole step: it changes the velocity_ by (F/m)*dt.
   void ApplyForce(Vec2 applied_force) { force_ += applied_force; }
+  void ApplyImpulse(Vec2 impulse) { velocity_ += impulse * GetInverseMass(); }
 
   [[nodiscard]] Scalar GetAngle() const {return angle_;}
   void SetAngle(Scalar new_angle){angle_ = new_angle;}

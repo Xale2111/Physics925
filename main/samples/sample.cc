@@ -12,6 +12,7 @@
 #include "main/samples/10_bounce_collider_shapes.h"
 #include "main/samples/11_ground_bounce.h"
 #include "main/samples/12_rolling_circle.h"
+#include "main/samples/99_platformer.h"
 
 namespace gpr925 {
 
@@ -30,6 +31,7 @@ SampleRegistry::SampleRegistry() {
   samples_.push_back({"10 Bounce Collider Shapes", std::make_unique<BounceColliderShapes>()});
   samples_.push_back({"11 Ground Bounce", std::make_unique<GroundBounce>()});
   samples_.push_back({"12 Rolling Circle", std::make_unique<RollingCircle>()});
+  samples_.push_back({"99 Platformer", std::make_unique<Platformer>()});
 
 }
 
