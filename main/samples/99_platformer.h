@@ -13,15 +13,30 @@
 
 namespace gpr925 {
 
+enum class Tag
+{
+  kDefault,
+  kPlayer,
+  kGround,
+};
+
+struct GameObject{
+  BodyId body_id;
+  Tag tag;
+  ColorId color;
+};
+
 class Platformer : public Sample {
  public:
   void Begin(const SampleContext& context) override;
   void FixedUpdate(const Input& input) override;
+  void LateUpdate(const Input& input) override;
   void Draw(DrawList& draw_list) const override;
   void End() override;
 
  private:
   PhysicsWorld world_;
+  std::vector<GameObject> game_objects_;
   BodyId player_id;
   BodyId ground_id_;
   std::vector<ColliderId> colliders_ids_;
