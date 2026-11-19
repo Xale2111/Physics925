@@ -13,12 +13,7 @@
 
 namespace gpr925 {
 
-enum class Tag
-{
-  kDefault,
-  kPlayer,
-  kGround,
-};
+enum class Tag { kDefault, kPlayer, kGround, kGroundCheck };
 
 struct GameObject{
   BodyId body_id;
@@ -30,15 +25,25 @@ class Platformer : public Sample {
  public:
   void Begin(const SampleContext& context) override;
   void FixedUpdate(const Input& input) override;
-  void LateUpdate(const Input& input) override;
   void Draw(DrawList& draw_list) const override;
   void End() override;
 
  private:
+  void UpdateGrounded();               // reads the events of the last Step
+  Tag TagOf(BodyId id) const;
+
   PhysicsWorld world_;
   std::vector<GameObject> game_objects_;
   BodyId player_id;
+  BodyId player_groundcheck_id;
   BodyId ground_id_;
+
+
+
+  bool grounded_ = false;
+  bool up_before_ = false;
+  int ground_contacts_ = 0;            // replaces overlap_counts_
+
   std::vector<ColliderId> colliders_ids_;
   //since color isn't part of the physics, keep it outside
   std::vector<ColorId> bodies_colors_;

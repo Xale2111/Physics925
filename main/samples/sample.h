@@ -86,7 +86,7 @@ class Sample {
   ///
   /// @param input State of the virtual pad for this step.
   virtual void FixedUpdate(const Input& input) = 0;
-  virtual void LateUpdate(const Input& input) = 0;
+
   /// Describes the current state of the scene for the host to render.
   ///
   /// The registry has already cleared @p draw_list and set its camera; the
@@ -167,9 +167,6 @@ class SampleRegistry {
   ///
   /// @param input State of the virtual pad for this step.
   void FixedUpdate(const Input& input);
-
-
-  void LateUpdate(const Input& input);
   /// Fills a draw list with the selected sample's frame.
   ///
   /// Clears the list, sets its camera to the context's world bounds, then

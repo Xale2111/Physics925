@@ -17,7 +17,6 @@ class BounceColliderBoxes : public Sample {
  public:
   void Begin(const SampleContext& context) override;
   void FixedUpdate(const Input& input) override;
-  void LateUpdate(const Input& input) override{  if (input.IsHeld(Button::kB)) {return;}}
   void Draw(DrawList& draw_list) const override;
   void End() override;
 

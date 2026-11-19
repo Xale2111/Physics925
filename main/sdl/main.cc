@@ -159,7 +159,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
       while (accumulator >= kFixedDeltaTime) {
         // "pressed" is only set on the first step after the button went down
         registry.FixedUpdate(gpr925::Input::FromHeld(held, previous_held));
-        registry.LateUpdate(gpr925::Input::FromHeld(held, previous_held));
         previous_held = held;
         accumulator -= kFixedDeltaTime;
       }

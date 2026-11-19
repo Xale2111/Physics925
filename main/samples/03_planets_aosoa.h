@@ -21,7 +21,6 @@ class PlanetAoSoaSample : public Sample {
   void Begin(const SampleContext& context) override;
   /// Moves the balls and the player by one step.
   void FixedUpdate(const Input& input) override;
-  void LateUpdate(const Input& input) override{  if (input.IsHeld(Button::kB)) {return;}}
   /// Draws the balls, the player, the box and the frame.
   void Draw(DrawList& draw_list) const override;
   /// Removes the balls.

@@ -67,6 +67,10 @@ void Platformer::Begin(const SampleContext& context) {
   player_id = world_.AddBody(def);
   player_collider.AddBody(player_id);
 
+  BoxCollider& player_groundcheck_collider = world_.CreateCollider<BoxCollider>(-kPlayerGroundCheckHalfSize, kPlayerGroundCheckHalfSize, true);
+  player_groundcheck_id = world_.AddBody(def);
+  player_groundcheck_collider.AddBody(player_groundcheck_id);
+
   const Scalar ground_half_width =
       (bounds_.max_bound.x() - bounds_.min_bound.x()) / Scalar{2} -
       kFrameMargin.x();
@@ -79,41 +83,35 @@ void Platformer::Begin(const SampleContext& context) {
   ground_id_ = world_.AddBody(def);
   ground_collider.AddBody(ground_id_);
 
+  game_objects_.push_back({player_groundcheck_id, Tag::kGroundCheck, sample_color::kRed});
   game_objects_.push_back({player_id, Tag::kPlayer, sample_color::kWhite});
   game_objects_.push_back({ground_id_, Tag::kGround, sample_color::kGreen});
 }
 
 void Platformer::FixedUpdate(const Input& input) {
-  if (input.IsHeld(Button::kB)) {
-    return;
-  }
+  if (input.IsHeld(Button::kB)) return;
 
   Body& player = world_.GetBody(player_id);
   const Scalar mass = player.GetMass();
 
+  // Horizontal: reach the wanted speed with an impulse
   Scalar target_vx{};
-
   if (input.IsHeld(Button::kLeft))  target_vx = -kPlayerSpeed;
   if (input.IsHeld(Button::kRight)) target_vx = kPlayerSpeed;
+  player.ApplyImpulse(Vec2{(target_vx - player.GetVelocity().x()) * mass, Scalar{}});
 
-  const Scalar dvx = target_vx - player.GetVelocity().x();
-  player.ApplyImpulse(Vec2{dvx * mass, Scalar{}});
-
-
-  if (input.IsHeld(Button::kUp)) {
-    player.ApplyImpulse(Vec2{Scalar{}, -kPlayerJumpForce * player.GetMass()});
+  const bool up_now = input.IsHeld(Button::kUp);
+  if (up_now && !up_before_ && grounded_) {
+    player.ApplyImpulse(Vec2{Scalar{}, -kPlayerJumpForce * mass});
   }
+  up_before_ = up_now;
 
   player.ApplyForce(Vec2{Scalar{}, kGravity * mass});
 
   world_.Step(kFixedDeltaTime, true);
-}
+  world_.GetBody(player_groundcheck_id).SetPosition(player.GetPosition());
 
-void Platformer::LateUpdate(const gpr925::Input& input) {
-  if (input.IsHeld(Button::kB)) {
-    return;
-  }
-  std::cout << "LateUpdate";
+  UpdateGrounded();
 }
 
 void Platformer::Draw(DrawList& draw_list) const {
@@ -133,4 +131,24 @@ void Platformer::Draw(DrawList& draw_list) const {
 }
 
 void Platformer::End() { world_.Clear(); }
+
+Tag Platformer::TagOf(BodyId id) const {
+  for (const GameObject& go : game_objects_) {
+    if (go.body_id == id) return go.tag;
+  }
+  return Tag::kDefault;
+}
+
+void Platformer::UpdateGrounded() {
+  for (const TriggerEvent& event : world_.TriggerEvents()) {
+    const Tag a = TagOf(event.a);
+    const Tag b = TagOf(event.b);
+    const bool sensor_vs_ground =
+        (a == Tag::kGroundCheck && b == Tag::kGround) ||
+        (a == Tag::kGround && b == Tag::kGroundCheck);
+    if (!sensor_vs_ground) continue;   // ignores the sensor vs the player itself
+    ground_contacts_ += (event.type == TriggerEventType::kEnter) ? 1 : -1;
+  }
+  grounded_ = ground_contacts_ > 0;
+}
 }  // namespace gpr925

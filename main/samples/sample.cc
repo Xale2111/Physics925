@@ -54,12 +54,6 @@ void SampleRegistry::FixedUpdate(const Input& input) {
   }
 }
 
-void SampleRegistry::LateUpdate(const Input& input) {
-  if (current_index_ != kNone) {
-    samples_[current_index_].sample->LateUpdate(input);
-  }
-}
-
 void SampleRegistry::Draw(DrawList& draw_list) const {
   draw_list.Clear();
   draw_list.camera = context_.world_bounds;
