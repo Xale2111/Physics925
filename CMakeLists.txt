@@ -57,12 +57,31 @@ endif()
 set(WARNINGS_AS_ERRORS ${GPR925_WARNINGS_AS_ERRORS} CACHE BOOL "Treat compiler warnings as errors" FORCE)
 add_subdirectory(externals/EngineLib)
 
+option(GPR925_PROFILE "Profile with Tracy (PC only, not the DS)" OFF)
+if(GPR925_PROFILE)
+    if(GPR925_NDS)
+        message(FATAL_ERROR "GPR925_PROFILE: Tracy needs a network, it cannot run on the DS")
+    endif()
+    include(FetchContent)
+    # Only record while the profiler is connected: no memory growth otherwise
+    set(TRACY_ON_DEMAND ON CACHE BOOL "" FORCE)
+    FetchContent_Declare(tracy
+            URL https://github.com/wolfpld/tracy/archive/refs/tags/v0.11.1.tar.gz
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+            SYSTEM)  # its warnings do not go through our -Werror (needs CMake 3.25, you have it)
+    FetchContent_MakeAvailable(tracy)
+endif()
+
 # The engine: your physics code goes in include/gpr925 and src
 file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS src/*.cc include/*.h)
 add_library(Gpr925Physics STATIC ${SRC_FILES})
 target_include_directories(Gpr925Physics PUBLIC include/)
 target_link_libraries(Gpr925Physics PUBLIC EngineLib)
 target_compile_definitions(Gpr925Physics PUBLIC GPR925_SCALAR_${GPR925_SCALAR})
+if(GPR925_PROFILE)
+    target_link_libraries(Gpr925Physics PUBLIC Tracy::TracyClient)
+    target_compile_definitions(Gpr925Physics PUBLIC GPR925_USE_TRACY)
+endif()
 if(GPR925_NDS)
     target_compile_definitions(Gpr925Physics PUBLIC GPR925_PLATFORM_NDS)
 endif()

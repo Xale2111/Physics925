@@ -38,7 +38,7 @@
       "name": "relwithdebinfo",
       "displayName": "RelWithDebInfo (samples + tests)",
       "inherits": "base",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo", "GPR925_PROFILE": "ON" }
     },
     {
       "name": "nds",

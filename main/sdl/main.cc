@@ -16,6 +16,7 @@
 #include "main/samples/sample.h"
 #include "main/samples/sample_config.h"
 #include "main/sdl/sdl_sample_drawer.h"
+#include "gpr925/profiler.h"
 
 namespace {
 
@@ -171,6 +172,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
       ImGui::Render();
       ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
       SDL_RenderPresent(renderer);
+      GPR925_FRAME();
     }
   }
 

@@ -34,6 +34,7 @@ void BounceColliderCircles::Begin(const SampleContext& context) {
                         sample_config::kBouncingElements);
   bodies_ids_.reserve(sample_config::kBouncingElements);
   bodies_colors_.reserve(sample_config::kBouncingElements);
+  world_.SetUseQuadtree(false); //NOT USING THE QUATREE NOW
 
   SampleRng rng{kSeed};
 
@@ -71,6 +72,8 @@ void BounceColliderCircles::FixedUpdate(const Input& input) {
 void BounceColliderCircles::Draw(DrawList& draw_list) const {
 
 #ifndef GPR925_PLATFORM_NDS
+  if (world_.UsesQuadtree())
+  {
   // Outline of every quadtree node. PC only: the DS does not get these lines.
   auto draw_node = [&draw_list](const Rect& node) {
     const Vec2 top_right{node.max_bound.x(), node.min_bound.y()};
@@ -80,7 +83,9 @@ void BounceColliderCircles::Draw(DrawList& draw_list) const {
     draw_list.lines.push_back({node.max_bound, bottom_left, sample_color::kGrey});
     draw_list.lines.push_back({bottom_left, node.min_bound, sample_color::kGrey});
   };
-  world_.GetQuadTree().ForEachNode(draw_node);
+
+    world_.GetQuadTree().ForEachNode(draw_node);
+  }
 #endif
 
   for (std::size_t i = 0; i < bodies_ids_.size(); ++i) {

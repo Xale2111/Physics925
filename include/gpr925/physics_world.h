@@ -68,6 +68,12 @@ class PhysicsWorld {
   }
 
   [[nodiscard]] const QuadTree& GetQuadTree() const { return quadtree_; }
+  // Broadphase: the quadtree (default) or default O(n^2) loop
+  void SetUseQuadtree(bool use) {
+    use_quadtree_ = use;
+    if (!use) quadtree_ = QuadTree{};  // no stale tree for the debug drawing
+  }
+  [[nodiscard]] bool UsesQuadtree() const { return use_quadtree_; }
 
   // One fixed step: gather the forces, then integrate.
   void Step(Scalar dt, bool stay_in_bounds = false);
@@ -103,6 +109,8 @@ class PhysicsWorld {
   std::vector<TriggerEvent> events_;
   QuadTree quadtree_;
   std::vector<BroadphasePair> candidate_pairs_;
+  bool use_quadtree_ = true;
+  std::vector<Rect> aabbs_;
 };
 
 }  // namespace gpr925

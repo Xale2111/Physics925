@@ -9,6 +9,7 @@
 #include "gpr925/collision.h"
 #include "gpr925/contact_resolution.h"
 #include "gpr925/physics_world.h"
+#include "gpr925/profiler.h"
 
 namespace gpr925 {
 
@@ -35,7 +36,8 @@ void PhysicsWorld::RemoveBody(BodyId id) {
   auto temp = id;
 }*/
 
-std::optional<ColliderType> PhysicsWorld::GetColliderTypeWithBodyId(BodyId id) const {
+std::optional<ColliderType> PhysicsWorld::GetColliderTypeWithBodyId(
+    BodyId id) const {
   const Collider* collider = GetColliderWithBodyId(id);
   if (collider == nullptr) {
     return std::nullopt;
@@ -54,6 +56,7 @@ const Collider* PhysicsWorld::GetColliderWithBodyId(BodyId id) const {
 }
 
 void PhysicsWorld::Step(Scalar dt, bool stay_in_bounds) {
+  GPR925_ZONE();
   events_.clear();
   ApplyGravity();  // sum the forces
   Integrate(dt);   // velocity_, then position_
@@ -67,6 +70,7 @@ void PhysicsWorld::Step(Scalar dt, bool stay_in_bounds) {
 }
 
 void PhysicsWorld::ApplyGravity() {
+  GPR925_ZONE();
   if (gravitational_constant_ == Scalar{}) {
     return;  // no gravity: no force to sum, and no O(n^2) loop for nothing
   }
@@ -102,6 +106,7 @@ void PhysicsWorld::ApplyGravity() {
 }
 
 void PhysicsWorld::Integrate(Scalar dt) {
+  GPR925_ZONE();
   for (Body& body : bodies_) {
     if (body.GetBodyType() == BodyType::kStatic) {
       continue;
@@ -124,20 +129,22 @@ void PhysicsWorld::Integrate(Scalar dt) {
       const Scalar angular_acceleration = body.GetTorque() / body.GetInertia();
       body.SetAngularVelocity(body.GetAngularVelocity() +
                               angular_acceleration * dt);  // omega first
-      body.SetAngle(body.GetAngle() +
-                    body.GetAngularVelocity() * dt);  // then the angle, new omega
+      body.SetAngle(body.GetAngle() + body.GetAngularVelocity() *
+                                          dt);  // then the angle, new omega
     }
     body.SetTorque(Scalar{});  // reset torque
   }
 }
 
 void PhysicsWorld::UpdateTriggers() {
+  GPR925_ZONE();
   std::vector<ColliderPair> current;
   for (const BroadphasePair& pair : candidate_pairs_) {
     const ColliderEntry& entry_a = entries_[pair.first];
     const ColliderEntry& entry_b = entries_[pair.second];
     if (entry_a.body_id == entry_b.body_id) continue;
-    if (!entry_a.collider->IsTrigger() && !entry_b.collider->IsTrigger()) continue;
+    if (!entry_a.collider->IsTrigger() && !entry_b.collider->IsTrigger())
+      continue;
     const Body& body_a = bodies_[static_cast<std::size_t>(entry_a.body_id)];
     const Body& body_b = bodies_[static_cast<std::size_t>(entry_b.body_id)];
     if (Overlap(*entry_a.collider, body_a.GetPosition(), body_a.GetAngle(),
@@ -172,6 +179,7 @@ void PhysicsWorld::UpdateTriggers() {
   previous_overlaps_ = std::move(current);
 }
 void PhysicsWorld::BounceInBounds() {
+  GPR925_ZONE();
   for (std::size_t i = 0; i < bodies_.size(); ++i) {
     if ((bodies_[i].GetVelocity().x() > Scalar{} &&
          bodies_[i].GetPosition().x() > bounds_.max_bound.x()) ||
@@ -191,6 +199,7 @@ void PhysicsWorld::BounceInBounds() {
 }
 
 void PhysicsWorld::BuildEntries() {
+  GPR925_ZONE();
   entries_.clear();
   for (const auto& collider : colliders_) {
     for (const BodyId body_id : collider->GetBodies()) {
@@ -200,6 +209,7 @@ void PhysicsWorld::BuildEntries() {
 }
 
 void PhysicsWorld::ResolveCollisions() {
+  GPR925_ZONE();
   for (const BroadphasePair& pair : candidate_pairs_) {
     const ColliderEntry& ea = entries_[pair.first];
     const ColliderEntry& eb = entries_[pair.second];
@@ -208,26 +218,53 @@ void PhysicsWorld::ResolveCollisions() {
 
     Body& a = GetBody(ea.body_id);
     Body& b = GetBody(eb.body_id);
-    const auto contact = GenerateContact(*ea.collider, a.GetPosition(), a.GetAngle(),
-                                         *eb.collider, b.GetPosition(), b.GetAngle());
+    const auto contact =
+        GenerateContact(*ea.collider, a.GetPosition(), a.GetAngle(),
+                        *eb.collider, b.GetPosition(), b.GetAngle());
     if (contact) {
-      const Scalar restitution = CombineBounciness(ea.collider->GetMaterial(), eb.collider->GetMaterial());
-      const Scalar friction = CombineFriction(ea.collider->GetMaterial(), eb.collider->GetMaterial());
-      gpr925::ResolveContact(a, b, *contact, restitution, friction);  // contact_resolution.h
+      const Scalar restitution = CombineBounciness(ea.collider->GetMaterial(),
+                                                   eb.collider->GetMaterial());
+      const Scalar friction = CombineFriction(ea.collider->GetMaterial(),
+                                              eb.collider->GetMaterial());
+      gpr925::ResolveContact(a, b, *contact, restitution,
+                             friction);  // contact_resolution.h
     }
   }
 }
 
+// If use_quadtree_ is true, the broadphase is a quadtree. if false, we do
+// O(n^2) to check each pair of colliders
 void PhysicsWorld::BuildBroadphase() {
-  // Rebuilt from scratch every step: the bodies moved. (Naive: this allocates.)
-  quadtree_ = QuadTree(bounds_, 0);
-  for (std::size_t i = 0; i < entries_.size(); ++i) {
-    const ColliderEntry& entry = entries_[i];
+  GPR925_ZONE();
+  aabbs_.clear();
+  for (const ColliderEntry& entry : entries_) {
     const Body& body = bodies_[static_cast<std::size_t>(entry.body_id)];
-    quadtree_.Insert({i, ComputeAabb(*entry.collider, body.GetPosition(), body.GetAngle())});  // id = index in entries_
+    aabbs_.push_back(
+        ComputeAabb(*entry.collider, body.GetPosition(), body.GetAngle()));
   }
-  candidate_pairs_.clear();  // keeps its capacity: no allocation after the first steps
-  quadtree_.GeneratePairs(candidate_pairs_);
+
+  candidate_pairs_.clear();
+  if (use_quadtree_) {
+    GPR925_ZONE_NAMED("Quadtree build");
+    // Rebuilt from scratch every step: the bodies moved
+    quadtree_ = QuadTree(bounds_, 0);
+    for (std::size_t i = 0; i < aabbs_.size(); ++i) {
+      quadtree_.Insert({i, aabbs_[i]});  // id = index in entries_
+    }
+    GPR925_ZONE_NAMED("Quadtree pairs");
+    quadtree_.GeneratePairs(candidate_pairs_);
+  } else {
+    GPR925_ZONE_NAMED("Default pairs (O(n^2))");
+    for (std::size_t i = 0; i < aabbs_.size(); ++i) {
+      for (std::size_t j = i + 1; j < aabbs_.size(); ++j) {
+        if (OverlapRect(aabbs_[i], aabbs_[j])) {
+          candidate_pairs_.push_back({i, j});
+        }
+      }
+    }
+  }
+  GPR925_PLOT("broadphase pairs", candidate_pairs_.size());
+  GPR925_PLOT("entries", entries_.size());
 }
 
 }  // namespace gpr925
